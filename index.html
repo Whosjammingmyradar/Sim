@@ -2,402 +2,549 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>TIP — Tactical Intelligence Platform</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-  :root {
-    --bg:      #080a0d;
-    --panel:   #0c0f14;
-    --border:  #1c2530;
-    --dim:     #2a3d52;
-    --mid:     #4a6680;
-    --text:    #8aa8c0;
-    --bright:  #b8d0e8;
-    --accent:  #3a7aaa;
-    --red:     #cc2828;
-    --orange:  #c87820;
-    --yellow:  #b8a010;
-    --green:   #28885a;
-    --mono:    'Share Tech Mono', 'Courier New', monospace;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html, body, #app { width:100%; height:100%; overflow:hidden; background:var(--bg); }
-  body { font-family: var(--mono); color: var(--text); font-size:11px; }
-  ::-webkit-scrollbar { width:2px; }
-  ::-webkit-scrollbar-track { background:var(--bg); }
-  ::-webkit-scrollbar-thumb { background:var(--border); }
-  button { font-family:var(--mono); cursor:pointer; background:none; border:none; color:inherit; }
-  input  { font-family:var(--mono); background:none; border:none; outline:none; color:inherit; }
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root{
+  --bg:#06080b; --panel:#080b0f; --border:#16222e; --dim:#2a3d52;
+  --mid:#4a6a88; --text:#8ab0c8; --hi:#b8d0e8;
+  --red:#c03030; --orange:#c07020; --yellow:#a89010; --green:#208050;
+  --blue:#2a5a8a; --mono:'Share Tech Mono','Courier New',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body,#app{width:100%;height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:var(--mono);color:var(--text);font-size:11px}
+::-webkit-scrollbar{width:2px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border)}
+button{font-family:var(--mono);cursor:pointer;background:none;border:none;color:inherit}
+input{font-family:var(--mono);background:none;border:none;outline:none;color:inherit}
 
-  #app { display:flex; flex-direction:column; }
+#app{display:flex;flex-direction:column}
+#bar{height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--border);z-index:100;position:relative}
+.bl{display:flex;align-items:center;gap:14px}
+.bc{color:var(--red);font-size:8px;letter-spacing:3px}
+.bt{color:var(--hi);font-size:11px;letter-spacing:2.5px}
+.bs{color:var(--dim);font-size:8px}
+.br{display:flex;gap:5px;align-items:center}
+.tb{height:24px;padding:0 10px;font-size:8px;border:1px solid var(--border);color:var(--dim);letter-spacing:.5px;transition:all .12s}
+.tb:hover{border-color:var(--mid);color:var(--text)}
+.tb.on{border-color:var(--blue);color:#4a8ac0;background:rgba(42,90,138,.08)}
+.tb.danger{border-color:#3a1010;color:var(--red)}
+.tb.danger:hover{border-color:var(--red)}
+#sc{height:24px;padding:0 8px;font-size:9px;width:220px;border:1px solid var(--border);color:var(--text);background:var(--bg)}
 
-  /* ── TOPBAR ── */
-  #topbar {
-    height:36px; flex-shrink:0;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:0 14px; background:var(--panel);
-    border-bottom:1px solid var(--border);
-    z-index:1000; position:relative;
-  }
-  #topbar .left { display:flex; align-items:center; gap:16px; }
-  #topbar .classif { color:var(--red); font-size:8px; letter-spacing:3px; }
-  #topbar .title { color:var(--bright); font-size:11px; letter-spacing:3px; }
-  #topbar .sub { color:var(--dim); font-size:8px; }
-  #topbar .right { display:flex; align-items:center; gap:5px; }
-  .topbtn {
-    height:24px; padding:0 10px; font-size:8px; letter-spacing:.5px;
-    border:1px solid var(--border); color:var(--mid);
-    transition:border-color .15s, color .15s;
-  }
-  .topbtn:hover { border-color:var(--accent); color:var(--text); }
-  .topbtn.active { border-color:var(--accent); color:var(--accent); background:rgba(58,122,170,0.1); }
-  .topbtn.danger { border-color:#441414; color:var(--red); }
-  .topbtn.danger:hover { border-color:var(--red); }
-  #scenario-in { height:24px; padding:0 8px; font-size:9px; width:200px; border:1px solid var(--border); color:var(--text); background:var(--bg); }
+#main{display:flex;flex:1;min-height:0}
+.sb{width:242px;flex-shrink:0;background:var(--panel);display:flex;flex-direction:column;overflow:hidden}
+#lsb{border-right:1px solid var(--border)}
+#rsb{border-left:1px solid var(--border)}
+.sec{padding:9px 11px;border-bottom:1px solid var(--border);flex-shrink:0}
+.lbl{font-size:7px;color:var(--dim);letter-spacing:2.5px;margin-bottom:6px}
+.scr{flex:1;overflow-y:auto;padding:7px 11px}
 
-  /* ── LAYOUT ── */
-  #layout { display:flex; flex:1; min-height:0; }
+/* NATION */
+.nr{display:flex;align-items:center;gap:7px;padding:4px 7px;margin-bottom:2px;cursor:pointer;border:1px solid transparent;font-size:10px;transition:all .1s}
+.nr:hover{border-color:var(--border)}
 
-  /* ── SIDEBAR ── */
-  .sidebar {
-    width:240px; flex-shrink:0;
-    background:var(--panel); display:flex; flex-direction:column;
-    overflow:hidden; z-index:100;
-  }
-  #left-panel  { border-right:1px solid var(--border); }
-  #right-panel { border-left:1px solid var(--border); }
-  .s-section { padding:10px 12px; border-bottom:1px solid var(--border); flex-shrink:0; }
-  .s-label { font-size:7px; color:var(--dim); letter-spacing:2.5px; text-transform:uppercase; margin-bottom:7px; }
-  .s-scroll { flex:1; overflow-y:auto; padding:8px 12px; }
+/* CAT TABS */
+.ctabs{display:flex;flex-wrap:wrap;gap:3px}
+.ct{padding:3px 7px;font-size:7px;letter-spacing:.5px;border:1px solid var(--border);color:var(--dim);cursor:pointer;transition:all .1s}
+.ct:hover{color:var(--text);border-color:var(--mid)}
 
-  /* Nation tabs */
-  .nation-row {
-    display:flex; align-items:center; gap:8px;
-    padding:5px 8px; margin-bottom:2px; cursor:pointer;
-    border:1px solid transparent; font-size:10px;
-    transition:all .12s;
-  }
-  .nation-row:hover { border-color:var(--border); }
-  .nation-row.sel { font-weight:bold; }
+/* EQ CARD */
+.ec{padding:7px 8px;margin-bottom:4px;border:1px solid var(--border);transition:border-color .1s}
+.ec:hover{border-color:#253545}
+.ec.pl{border-color:var(--yellow);background:rgba(168,144,16,.04)}
+.en{font-size:9px;color:var(--hi);font-weight:bold;margin-bottom:2px;line-height:1.35}
+.et{font-size:7px;color:var(--dim);margin-bottom:4px}
+.er{font-size:7px;color:var(--dim);margin-bottom:5px}
+.eb{flex:1;padding:3px 0;font-size:7px;border:1px solid var(--border);color:var(--dim);cursor:pointer;letter-spacing:.4px;transition:all .1s}
+.eb:hover{color:var(--text);border-color:var(--mid)}
+.eb.pa{border-color:var(--yellow);color:var(--yellow);background:rgba(168,144,16,.07)}
+.tbadge{font-size:7px;padding:1px 5px;border:1px solid;opacity:.72;flex-shrink:0}
 
-  /* Category tabs */
-  .cat-tabs { display:flex; flex-wrap:wrap; gap:3px; }
-  .cat-tab {
-    padding:3px 8px; font-size:7px; letter-spacing:.5px;
-    border:1px solid var(--border); color:var(--dim); cursor:pointer;
-    transition:all .12s;
-  }
-  .cat-tab:hover { color:var(--text); border-color:var(--mid); }
-  .cat-tab.sel { color:var(--bright); border-color:var(--accent); background:rgba(58,122,170,0.08); }
+/* MAP WRAP */
+#mw{flex:1;position:relative;overflow:hidden;min-width:0}
+#mc{position:absolute;top:0;left:0;width:100%;height:100%;cursor:default}
+#oc{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10}
 
-  /* Equipment card */
-  .eq-card {
-    padding:8px; margin-bottom:4px;
-    border:1px solid var(--border);
-    transition:border-color .12s;
-    cursor:default;
-  }
-  .eq-card:hover { border-color:var(--mid); }
-  .eq-card.placing { border-color:var(--yellow); background:rgba(184,160,16,0.05); }
-  .eq-card.simming { border-color:var(--accent); background:rgba(58,122,170,0.06); }
-  .eq-name { font-size:9px; color:var(--bright); font-weight:bold; margin-bottom:2px; line-height:1.4; }
-  .eq-type { font-size:7px; color:var(--dim); margin-bottom:6px; }
-  .eq-btns { display:flex; gap:3px; }
-  .eq-btn {
-    flex:1; padding:3px 0; font-size:7px; letter-spacing:.5px;
-    border:1px solid var(--border); color:var(--dim); cursor:pointer;
-    transition:all .12s;
-  }
-  .eq-btn:hover { color:var(--text); border-color:var(--mid); }
-  .eq-btn.place-active { border-color:var(--yellow); color:var(--yellow); background:rgba(184,160,16,0.08); }
-  .eq-btn.sim-active   { border-color:var(--accent); color:var(--accent); background:rgba(58,122,170,0.08); }
+/* Hints */
+.hint{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);padding:5px 16px;font-size:8px;letter-spacing:1px;background:rgba(4,6,9,.96);z-index:50;pointer-events:none;white-space:nowrap;display:none}
+#ph{border:1px solid var(--yellow);color:var(--yellow)}
+#th{border:1px solid var(--red);color:var(--red)}
 
-  /* Threat badge */
-  .threat {
-    font-size:7px; padding:1px 5px; letter-spacing:.5px; flex-shrink:0;
-    border:1px solid currentColor; opacity:.75;
-  }
+/* SIM HUD */
+#shud{position:absolute;top:9px;left:50%;transform:translateX(-50%);background:rgba(4,6,9,.94);border:1px solid #2a5a8a;padding:5px 16px;font-size:8px;color:#4a8ac0;letter-spacing:1.5px;z-index:50;pointer-events:none;white-space:nowrap;display:none}
 
-  /* ── MAP AREA ── */
-  #map-wrap { flex:1; position:relative; min-width:0; }
-  #map { width:100%; height:100%; }
-  .leaflet-tile-pane { filter: brightness(0.45) saturate(0.25) contrast(1.1); }
-  .leaflet-container { background:#060809; }
-  .leaflet-control-zoom, .leaflet-control-attribution { display:none !important; }
+/* ZOOM/LEGEND */
+#zc{position:absolute;bottom:14px;right:14px;z-index:30;display:flex;flex-direction:column;gap:2px}
+.zb{width:26px;height:26px;background:rgba(4,6,9,.92);border:1px solid var(--border)!important;color:var(--text);font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:30}
+#leg{position:absolute;bottom:14px;left:14px;z-index:30;background:rgba(4,6,9,.92);border:1px solid var(--border);padding:8px 10px}
+.lr{display:flex;align-items:center;gap:6px;margin-bottom:3px;font-size:8px}
+.ld{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
-  /* Canvas overlay */
-  #overlay {
-    position:absolute; top:0; left:0; width:100%; height:100%;
-    pointer-events:none; z-index:400;
-  }
+/* BRIEFING */
+#bb{position:absolute;top:0;left:0;right:0;z-index:60;background:rgba(4,6,9,.96);border-bottom:1px solid var(--border);padding:7px;text-align:center;font-size:9px;color:var(--text);letter-spacing:1px;display:none}
 
-  /* Target-mode cursor overlay */
-  #map-wrap.targeting { cursor:crosshair; }
-  #map-wrap.targeting #map { cursor:crosshair; }
+/* PLACE BAR */
+#plbar{display:none;padding:8px 11px;background:#090900;border-top:1px solid #252000;text-align:center}
 
-  /* Placing cursor */
-  #map-wrap.placing { cursor:crosshair; }
+/* RIGHT PANEL */
+.pc{padding:8px;border:1px solid var(--border)}
+.pn{font-size:10px;font-weight:bold;margin-bottom:2px;line-height:1.3}
+.py{font-size:7px;color:var(--dim);margin-bottom:7px}
+.pr{display:flex;justify-content:space-between;margin-bottom:3px}
+.pk{font-size:7px;color:var(--dim)}
+.pv{font-size:8px}
+.pbtn{flex:1;padding:5px 0;font-size:8px;border:1px solid var(--border);cursor:pointer;letter-spacing:.4px;transition:all .12s}
+.pbtn:hover{border-color:var(--mid)}
+.pbtn.tg{border-color:var(--orange);color:var(--orange)}
+.pbtn.rm{border-color:#3a1010;color:var(--red)}
+.oobr{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.ulr{display:flex;align-items:center;gap:6px;padding:3px 5px;cursor:pointer;border:1px solid transparent;margin-bottom:1px;transition:all .1s}
+.ulr:hover{border-color:var(--border)}
+.ulr.on{border-color:var(--blue)!important;background:rgba(42,90,138,.06)}
+.ult{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.uln{font-size:8px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-  /* Map UI overlays */
-  #placing-hint, #targeting-hint {
-    position:absolute; bottom:60px; left:50%; transform:translateX(-50%);
-    background:rgba(6,9,14,0.95); border:1px solid var(--yellow);
-    padding:6px 16px; font-size:9px; color:var(--yellow); letter-spacing:1px;
-    z-index:600; pointer-events:none; white-space:nowrap; display:none;
-  }
-  #targeting-hint { border-color:var(--red); color:var(--red); }
-
-  /* Zoom */
-  #zoom-ctrl {
-    position:absolute; bottom:16px; right:16px; z-index:500;
-    display:flex; flex-direction:column; gap:2px;
-  }
-  .z-btn {
-    width:26px; height:26px; background:rgba(6,9,14,0.92);
-    border:1px solid var(--border) !important; color:var(--text);
-    font-size:13px; display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-  }
-
-  /* Legend */
-  #legend {
-    position:absolute; bottom:16px; left:16px; z-index:500;
-    background:rgba(6,9,14,0.92); border:1px solid var(--border);
-    padding:8px 10px;
-  }
-  .leg-row { display:flex; align-items:center; gap:7px; margin-bottom:3px; font-size:8px; }
-  .leg-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
-
-  /* Briefing bar */
-  #briefing-bar {
-    position:absolute; top:0; left:0; right:0; z-index:700;
-    background:rgba(6,9,14,0.96); border-bottom:1px solid var(--border);
-    padding:7px 16px; text-align:center; font-size:9px;
-    color:var(--text); letter-spacing:1px; display:none;
-  }
-
-  /* ── UNIT MARKERS (Leaflet divIcon) ── */
-  .umarker { cursor:pointer !important; }
-  .um-wrap {
-    display:flex; flex-direction:column; align-items:center;
-    filter:drop-shadow(0 0 3px currentColor);
-    transition:filter .15s;
-  }
-  .um-wrap:hover { filter:drop-shadow(0 0 6px currentColor) brightness(1.3); }
-  .um-wrap svg { display:block; }
-  .um-label {
-    font-family:var(--mono); font-size:7px; white-space:nowrap;
-    background:rgba(6,9,14,0.88); padding:1px 5px;
-    border:1px solid currentColor; margin-top:2px; line-height:1.4;
-    opacity:.9;
-  }
-  .um-wrap.selected { filter:drop-shadow(0 0 8px currentColor) brightness(1.5) !important; }
-  .um-wrap.targeting-source { filter:drop-shadow(0 0 10px #ff4444) brightness(1.4) !important; }
-
-  /* Right panel states */
-  .profile-empty { font-size:8px; color:var(--dim); line-height:2; }
-  .profile-card { padding:8px; border:1px solid var(--border); }
-  .pf-name { font-size:10px; font-weight:bold; color:var(--bright); margin-bottom:2px; line-height:1.3; }
-  .pf-type { font-size:7px; color:var(--dim); margin-bottom:8px; }
-  .pf-row { display:flex; justify-content:space-between; margin-bottom:3px; }
-  .pf-key { font-size:7px; color:var(--dim); }
-  .pf-val { font-size:8px; }
-  .pf-btns { display:flex; gap:4px; margin-top:8px; }
-  .pf-btn {
-    flex:1; padding:5px 0; font-size:8px; letter-spacing:.5px;
-    border:1px solid var(--border); cursor:pointer; transition:all .15s;
-  }
-  .pf-btn.primary { border-color:var(--accent); color:var(--accent); }
-  .pf-btn.primary:hover { background:rgba(58,122,170,0.12); }
-  .pf-btn.target { border-color:var(--orange); color:var(--orange); }
-  .pf-btn.target:hover { background:rgba(200,120,32,0.1); }
-  .pf-btn.remove { border-color:#441414; color:var(--red); }
-  .pf-btn.remove:hover { background:rgba(204,40,40,0.08); }
-
-  /* OOB bar */
-  .oob-row { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
-  .oob-bar { flex:1; height:2px; background:var(--border); }
-  .oob-fill { height:100%; background:currentColor; opacity:.7; }
-
-  /* Unit list */
-  .ul-row {
-    display:flex; align-items:center; gap:6px;
-    padding:3px 6px; cursor:pointer; margin-bottom:1px;
-    border:1px solid transparent; transition:all .1s;
-  }
-  .ul-row:hover { border-color:var(--border); }
-  .ul-row.sel { border-color:var(--accent) !important; background:rgba(58,122,170,0.06); }
-  .ul-threat { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
-  .ul-name { font-size:8px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-
-  /* Engagement state */
-  .engage-active { animation: pulse-border .8s infinite; }
-  @keyframes pulse-border { 0%,100%{opacity:1} 50%{opacity:.4} }
-
-  /* Sim HUD on map */
-  #sim-hud {
-    position:absolute; top:10px; left:50%; transform:translateX(-50%);
-    background:rgba(6,9,14,0.94); border:1px solid var(--accent);
-    padding:5px 14px; font-size:8px; color:var(--accent); letter-spacing:1px;
-    z-index:600; pointer-events:none; white-space:nowrap; display:none;
-    box-shadow:0 0 16px rgba(58,122,170,0.15);
-  }
+/* Unit SVG icons on canvas */
+.unit-icon{position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:20;pointer-events:all}
+.unit-icon svg{display:block;overflow:visible}
+.unit-lbl{font-family:var(--mono);font-size:7px;white-space:nowrap;background:rgba(4,6,9,.88);padding:1px 5px;border:1px solid currentColor;margin-top:3px;text-align:center;pointer-events:none;line-height:1.4;opacity:.9}
+.unit-icon.sel svg{filter:brightness(1.5);animation:sel-pulse 1.5s infinite}
+.unit-icon.tgt-src svg{filter:brightness(1.5) drop-shadow(0 0 6px #c03030)}
+@keyframes sel-pulse{0%,100%{opacity:1}50%{opacity:.65}}
+.tgt-ring{position:absolute;inset:-6px;border:1px dashed rgba(192,48,48,.7);border-radius:2px;animation:sel-pulse .8s infinite;pointer-events:none}
 </style>
 </head>
 <body>
 <div id="app">
-  <div id="topbar">
-    <div class="left">
-      <span class="classif">⬛ CLASSIFIED</span>
-      <span class="title">TACTICAL INTELLIGENCE PLATFORM</span>
-      <span class="sub">v4.0 · TRAINING USE ONLY</span>
-    </div>
-    <div class="right">
-      <input id="scenario-in" value="Baltic Sea — NATO Eastern Flank"/>
-      <button class="topbtn" id="briefing-btn" onclick="toggleBriefing()">○ BRIEFING</button>
-      <button class="topbtn danger" id="endsim-btn" style="display:none" onclick="stopSim()">■ END SIM</button>
-      <button class="topbtn danger" onclick="clearAll()">✕ CLEAR</button>
-    </div>
+<div id="bar">
+  <div class="bl">
+    <span class="bc">⬛ CLASSIFIED</span>
+    <span class="bt">TACTICAL INTELLIGENCE PLATFORM</span>
+    <span class="bs">v4.2 · TRAINING USE ONLY</span>
   </div>
-
-  <div id="layout">
-    <!-- LEFT -->
-    <div class="sidebar" id="left-panel">
-      <div class="s-section">
-        <div class="s-label">Force</div>
-        <div id="nation-list"></div>
-      </div>
-      <div class="s-section">
-        <div class="s-label">Category</div>
-        <div class="cat-tabs" id="cat-tabs"></div>
-      </div>
-      <div class="s-scroll" id="eq-list"></div>
-      <div id="place-bar" style="display:none;padding:8px 12px;background:#0b0d08;border-top:1px solid #2a2800;text-align:center">
-        <div style="font-size:8px;color:var(--yellow);margin-bottom:2px">⊕ CLICK MAP TO PLACE</div>
-        <div id="place-name" style="font-size:7px;color:#b8a01055;margin-bottom:5px"></div>
-        <button onclick="cancelPlace()" style="border:1px solid #2a2800;color:#b8a01055;font-size:7px;padding:2px 10px">CANCEL</button>
-      </div>
-    </div>
-
-    <!-- MAP -->
-    <div id="map-wrap">
-      <div id="briefing-bar"></div>
-      <div id="map"></div>
-      <canvas id="overlay"></canvas>
-      <div id="placing-hint">⊕ CLICK MAP TO PLACE UNIT — ESC TO CANCEL</div>
-      <div id="targeting-hint">🎯 SELECT TARGET — CLICK UNIT OR LOCATION — ESC TO CANCEL</div>
-      <div id="sim-hud"></div>
-      <div id="zoom-ctrl">
-        <button class="z-btn" onclick="MAP.zoomIn()">+</button>
-        <button class="z-btn" onclick="MAP.zoomOut()">−</button>
-        <button class="z-btn" onclick="MAP.setView([58,18],6)" style="font-size:8px">⌂</button>
-      </div>
-      <div id="legend">
-        <div class="s-label" style="margin-bottom:5px">Threat</div>
-        <div class="leg-row"><span class="leg-dot" style="background:var(--red)"></span><span style="color:var(--red)">CRITICAL</span></div>
-        <div class="leg-row"><span class="leg-dot" style="background:var(--orange)"></span><span style="color:var(--orange)">HIGH</span></div>
-        <div class="leg-row"><span class="leg-dot" style="background:var(--yellow)"></span><span style="color:var(--yellow)">MEDIUM</span></div>
-        <div class="leg-row" style="margin-bottom:6px"><span class="leg-dot" style="background:var(--green)"></span><span style="color:var(--green)">LOW</span></div>
-        <div style="color:var(--dim);font-size:7px;border-top:1px solid var(--border);padding-top:5px;line-height:1.9">
-          SCROLL — zoom<br>DRAG — pan<br>
-          PLACE → click map<br>
-          TARGET → select source,<br>&nbsp;&nbsp;click Set Target
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT -->
-    <div class="sidebar" id="right-panel">
-      <div class="s-section">
-        <div class="s-label">Unit Profile</div>
-        <div id="unit-profile">
-          <div class="profile-empty">Select a unit on the map<br>to inspect and engage.<br><br>Place units with ⊕ PLACE,<br>then set targets and run<br>live simulations.</div>
-        </div>
-      </div>
-      <div class="s-section" id="engagement-panel" style="display:none">
-        <div class="s-label">Engagement</div>
-        <div id="engagement-info"></div>
-      </div>
-      <div class="s-section">
-        <div class="s-label">Order of Battle</div>
-        <div id="oob"></div>
-      </div>
-      <div class="s-scroll">
-        <div class="s-label">Deployed (<span id="unit-count">0</span>)</div>
-        <div id="unit-list"></div>
-      </div>
-    </div>
+  <div class="br">
+    <input id="sc" value="Baltic Sea — NATO Eastern Flank"/>
+    <button class="tb" id="bbb" onclick="toggleBriefing()">○ BRIEFING</button>
+    <button class="tb danger" id="esb" style="display:none" onclick="stopSims()">■ STOP SIMS</button>
+    <button class="tb danger" onclick="clearAll()">✕ CLEAR</button>
   </div>
 </div>
+<div id="main">
+  <div class="sb" id="lsb">
+    <div class="sec"><div class="lbl">Force</div><div id="nlist"></div></div>
+    <div class="sec"><div class="lbl">Category</div><div class="ctabs" id="ctabs"></div></div>
+    <div class="scr" id="eql"></div>
+    <div id="plbar">
+      <div style="font-size:8px;color:var(--yellow);margin-bottom:2px">⊕ CLICK MAP TO PLACE</div>
+      <div id="plname" style="font-size:7px;color:#a8901055;margin-bottom:4px"></div>
+      <button onclick="cancelPlace()" style="border:1px solid #252000;color:#a8901055;font-size:7px;padding:2px 10px">CANCEL</button>
+    </div>
+  </div>
+
+  <div id="mw">
+    <div id="bb"></div>
+    <canvas id="mc"></canvas>
+    <canvas id="oc"></canvas>
+    <div id="unit-layer"></div>
+    <div class="hint" id="ph">⊕ CLICK MAP TO PLACE — ESC CANCEL</div>
+    <div class="hint" id="th">🎯 CLICK UNIT OR MAP TO SET TARGET — ESC CANCEL</div>
+    <div id="shud"></div>
+    <div id="zc">
+      <button class="zb" onclick="zoom(1.2)">+</button>
+      <button class="zb" onclick="zoom(1/1.2)">−</button>
+      <button class="zb" style="font-size:9px" onclick="resetView()">⌂</button>
+    </div>
+    <div id="leg">
+      <div class="lbl" style="margin-bottom:5px">THREAT</div>
+      <div class="lr"><span class="ld" style="background:var(--red)"></span><span style="color:var(--red)">CRITICAL</span></div>
+      <div class="lr"><span class="ld" style="background:var(--orange)"></span><span style="color:var(--orange)">HIGH</span></div>
+      <div class="lr"><span class="ld" style="background:var(--yellow)"></span><span style="color:var(--yellow)">MEDIUM</span></div>
+      <div class="lr" style="margin-bottom:6px"><span class="ld" style="background:var(--green)"></span><span style="color:var(--green)">LOW</span></div>
+      <div style="color:var(--dim);font-size:7px;border-top:1px solid var(--border);padding-top:5px;line-height:2">
+        SCROLL — zoom<br>DRAG — pan<br>⊕ PLACE → click map<br>Select unit → SET TARGET<br>Click unit/point → fires
+      </div>
+    </div>
+  </div>
+
+  <div class="sb" id="rsb">
+    <div class="sec"><div class="lbl">Unit Profile</div>
+      <div id="uprof"><div style="font-size:8px;color:var(--dim);line-height:2">Select a unit to inspect.<br>⊕ Place units, then click<br>SET TARGET to engage.</div></div>
+    </div>
+    <div class="sec" id="engpanel" style="display:none"><div class="lbl">Engagement</div><div id="enginfo"></div></div>
+    <div class="sec"><div class="lbl">Order of Battle</div><div id="oob"><div style="font-size:8px;color:var(--dim)">No units deployed</div></div></div>
+    <div class="scr"><div class="lbl">Deployed (<span id="ucnt">0</span>)</div><div id="ulist"></div></div>
+  </div>
+</div>
+</div>
 <script>
-// ═══════════════════════════════════════════════════════════════
-// DATA
-// ═══════════════════════════════════════════════════════════════
-const TC = { CRITICAL:'#cc2828', HIGH:'#c87820', MEDIUM:'#b8a010', LOW:'#288858' };
+// ═══════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════
+const TC={CRITICAL:'#c03030',HIGH:'#c07020',MEDIUM:'#a89010',LOW:'#208050'};
 
-// Real silhouette SVG paths for each category
-// Aircraft: top-down silhouettes
-// Ground: side profile
-// Naval: side profile
-// SAM: side profile launcher
-const SILHOUETTES = {
-  // FIGHTER (top-down)
-  fighter: `<svg width="28" height="28" viewBox="0 0 28 28"><path d="M14 2 L16 10 L26 14 L16 16 L15 26 L14 28 L13 26 L12 16 L2 14 L12 10 Z" fill="currentColor" opacity="0.9"/><path d="M14 8 L15 14 L14 20 L13 14 Z" fill="currentColor" opacity="0.5"/></svg>`,
-  // STEALTH FIGHTER (flying wing)
-  stealth: `<svg width="32" height="28" viewBox="0 0 32 20"><path d="M16 2 L32 18 L28 18 L16 8 L4 18 L0 18 Z" fill="currentColor" opacity="0.9"/><path d="M16 2 L18 10 L16 12 L14 10 Z" fill="currentColor" opacity="0.5"/></svg>`,
-  // BOMBER (large, swept wing)
-  bomber: `<svg width="36" height="28" viewBox="0 0 36 24"><path d="M18 2 L22 10 L36 16 L30 18 L18 14 L6 18 L0 16 L14 10 Z" fill="currentColor" opacity="0.9"/><path d="M18 2 L20 12 L18 16 L16 12 Z" fill="currentColor" opacity="0.5"/></svg>`,
-  // HELICOPTER (top-down)
-  helicopter: `<svg width="30" height="22" viewBox="0 0 30 22"><ellipse cx="15" cy="12" rx="6" ry="4" fill="currentColor"/><line x1="0" y1="10" x2="30" y2="10" stroke="currentColor" stroke-width="1.5" opacity="0.7"/><line x1="22" y1="10" x2="26" y2="18" stroke="currentColor" stroke-width="1.2" opacity="0.7"/><line x1="22" y1="18" x2="28" y2="18" stroke="currentColor" stroke-width="1.2" opacity="0.7"/><circle cx="15" cy="10" r="1.5" fill="currentColor" opacity="0.5"/></svg>`,
-  // UCAV (delta)
-  ucav: `<svg width="28" height="22" viewBox="0 0 28 18"><path d="M14 2 L28 16 L24 16 L14 8 L4 16 L0 16 Z" fill="currentColor" opacity="0.85"/></svg>`,
-  // MBT (side profile)
-  mbt: `<svg width="36" height="18" viewBox="0 0 36 18"><rect x="2" y="8" width="32" height="8" rx="1" fill="currentColor" opacity="0.8"/><rect x="6" y="4" width="18" height="6" rx="1" fill="currentColor" opacity="0.9"/><line x1="20" y1="7" x2="34" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="0" y="12" width="36" height="3" rx="1" fill="currentColor" opacity="0.5"/><circle cx="6" cy="15.5" r="2" fill="currentColor" opacity="0.6"/><circle cx="14" cy="15.5" r="2" fill="currentColor" opacity="0.6"/><circle cx="22" cy="15.5" r="2" fill="currentColor" opacity="0.6"/><circle cx="30" cy="15.5" r="2" fill="currentColor" opacity="0.6"/></svg>`,
-  // IFV (smaller, side)
-  ifv: `<svg width="30" height="16" viewBox="0 0 30 16"><rect x="1" y="6" width="28" height="8" rx="1" fill="currentColor" opacity="0.8"/><rect x="5" y="3" width="14" height="6" rx="1" fill="currentColor" opacity="0.9"/><line x1="16" y1="5.5" x2="28" y2="5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="0" y="10" width="30" height="2.5" rx="1" fill="currentColor" opacity="0.5"/><circle cx="5" cy="13" r="1.8" fill="currentColor" opacity="0.6"/><circle cx="12" cy="13" r="1.8" fill="currentColor" opacity="0.6"/><circle cx="19" cy="13" r="1.8" fill="currentColor" opacity="0.6"/><circle cx="26" cy="13" r="1.8" fill="currentColor" opacity="0.6"/></svg>`,
-  // SAM launcher (side)
-  sam: `<svg width="36" height="20" viewBox="0 0 36 20"><rect x="0" y="12" width="28" height="5" rx="1" fill="currentColor" opacity="0.7"/><rect x="4" y="10" width="8" height="5" fill="currentColor" opacity="0.6"/><line x1="20" y1="12" x2="28" y2="5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/><line x1="22" y1="12" x2="30" y2="5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/><line x1="24" y1="12" x2="32" y2="5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/><circle cx="4" cy="17" r="2" fill="currentColor" opacity="0.5"/><circle cx="12" cy="17" r="2" fill="currentColor" opacity="0.5"/><circle cx="22" cy="17" r="2" fill="currentColor" opacity="0.5"/></svg>`,
-  // RADAR dish (side)
-  radar: `<svg width="28" height="24" viewBox="0 0 28 24"><path d="M4 10 Q14 0 24 10 L22 12 Q14 4 6 12 Z" fill="currentColor" opacity="0.9"/><line x1="14" y1="10" x2="14" y2="22" stroke="currentColor" stroke-width="2" opacity="0.7"/><line x1="8" y1="22" x2="20" y2="22" stroke="currentColor" stroke-width="2" opacity="0.6"/></svg>`,
-  // ARTILLERY / MLRS
-  artillery: `<svg width="36" height="16" viewBox="0 0 36 16"><rect x="0" y="8" width="22" height="6" rx="1" fill="currentColor" opacity="0.7"/><rect x="4" y="6" width="8" height="5" fill="currentColor" opacity="0.6"/><line x1="18" y1="8" x2="36" y2="3" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/><circle cx="4" cy="14" r="2" fill="currentColor" opacity="0.5"/><circle cx="12" cy="14" r="2" fill="currentColor" opacity="0.5"/><circle cx="20" cy="14" r="2" fill="currentColor" opacity="0.5"/></svg>`,
-  // SHIP (side)
-  ship: `<svg width="44" height="18" viewBox="0 0 44 18"><path d="M2 12 L6 8 L38 8 L42 12 L40 14 L4 14 Z" fill="currentColor" opacity="0.75"/><rect x="10" y="4" width="16" height="6" rx="1" fill="currentColor" opacity="0.85"/><rect x="16" y="1" width="5" height="5" fill="currentColor" opacity="0.7"/><line x1="18" y1="1" x2="18" y2="0" stroke="currentColor" stroke-width="1"/><rect x="28" y="6" width="8" height="4" rx="1" fill="currentColor" opacity="0.7"/></svg>`,
-  // SUBMARINE
-  submarine: `<svg width="44" height="14" viewBox="0 0 44 14"><ellipse cx="22" cy="9" rx="20" ry="5" fill="currentColor" opacity="0.75"/><rect x="18" y="3" width="6" height="6" rx="1" fill="currentColor" opacity="0.85"/><line x1="21" y1="3" x2="21" y2="0" stroke="currentColor" stroke-width="1.5"/><line x1="21" y1="0" x2="25" y2="0" stroke="currentColor" stroke-width="1.2"/></svg>`,
-  // CARRIER
-  carrier: `<svg width="56" height="16" viewBox="0 0 56 16"><path d="M2 10 L8 6 L50 6 L54 10 L52 13 L4 13 Z" fill="currentColor" opacity="0.75"/><rect x="12" y="2" width="30" height="5" rx="1" fill="currentColor" opacity="0.6"/><rect x="20" y="0" width="3" height="4" fill="currentColor" opacity="0.7"/><rect x="30" y="0" width="3" height="4" fill="currentColor" opacity="0.7"/></svg>`,
-  // MISSILE (upright)
-  missile: `<svg width="14" height="30" viewBox="0 0 14 30"><path d="M7 2 L9 8 L9 22 L7 26 L5 22 L5 8 Z" fill="currentColor" opacity="0.9"/><path d="M7 22 L11 28 L9 22 Z" fill="currentColor" opacity="0.6"/><path d="M7 22 L3 28 L5 22 Z" fill="currentColor" opacity="0.6"/><path d="M9 14 L13 18 L9 16 Z" fill="currentColor" opacity="0.5"/><path d="M5 14 L1 18 L5 16 Z" fill="currentColor" opacity="0.5"/></svg>`,
-};
-
-function getSilhouette(eq) {
-  const id = eq.id, type = eq.type.toLowerCase();
-  if (id==='b2'||id==='tu160'||id==='h6k') return SILHOUETTES.bomber;
-  if (id==='f22'||id==='f35a'||id==='f35b'||id==='su57'||id==='j20') return SILHOUETTES.stealth;
-  if (id==='ka52'||id==='ah64'||id==='z10') return SILHOUETTES.helicopter;
-  if (id==='mq9') return SILHOUETTES.ucav;
-  if (type.includes('bomber')) return SILHOUETTES.bomber;
-  if (type.includes('heli')) return SILHOUETTES.helicopter;
-  if (type.includes('fighter')||type.includes('aircraft')||type.includes('multirole')||type.includes('strike')) return SILHOUETTES.fighter;
-  if (id==='cvn'||id==='type003') return SILHOUETTES.carrier;
-  if (id==='virginia'||id==='kilo'||id==='astute') return SILHOUETTES.submarine;
-  if (type.includes('ship')||type.includes('frigate')||type.includes('destroyer')||type.includes('cruiser')||type.includes('corvette')||type.includes('carrier')) return SILHOUETTES.ship;
-  if (type.includes('sub')||type.includes('ssn')||type.includes('ssk')) return SILHOUETTES.submarine;
-  if (type.includes('radar')||type.includes('ew')) return SILHOUETTES.radar;
-  if (type.includes('sam')||type.includes('air defense')||type.includes('shorad')) return SILHOUETTES.sam;
-  if (type.includes('rocket')||type.includes('mlrs')||type.includes('howitzer')) return SILHOUETTES.artillery;
-  if (type.includes('ballistic')||type.includes('cruise')||type.includes('missile')) return SILHOUETTES.missile;
-  if (type.includes('mbt')||type.includes('tank')) return SILHOUETTES.mbt;
-  if (type.includes('ifv')||type.includes('apc')||type.includes('armored')) return SILHOUETTES.ifv;
-  return SILHOUETTES.fighter;
+// ── NATO MILSTD-2525C inspired symbols ──────────────────
+// Each is a proper tactical symbol following the standard:
+// Air: filled circle with type indicator
+// Ground: filled rectangle (unit box) with branch indicator
+// Naval: filled rectangle with wave
+// SAM: rectangle with missiles
+// Radar: rectangle with dish arc
+function milSym(cat, size=30) {
+  const s=size, h=Math.round(s*.65), cx=s/2, cy=h/2;
+  switch(cat){
+    case 'fighter': // Circle with ✈ — air unit
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" overflow="visible">
+        <circle cx="${cx}" cy="${cx}" r="${cx*.82}" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M${cx} ${cx-8} L${cx+9} ${cx+2} L${cx+5} ${cx+6} L${cx} ${cx+3} L${cx-5} ${cx+6} L${cx-9} ${cx+2} Z" fill="currentColor" opacity=".9"/>
+      </svg>`;
+    case 'stealth': // Circle + inner dashed ring
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" overflow="visible">
+        <circle cx="${cx}" cy="${cx}" r="${cx*.82}" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.6"/>
+        <circle cx="${cx}" cy="${cx}" r="${cx*.45}" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2" opacity=".6"/>
+        <path d="M${cx} ${cx-8} L${cx+9} ${cx+2} L${cx+5} ${cx+6} L${cx} ${cx+3} L${cx-5} ${cx+6} L${cx-9} ${cx+2} Z" fill="currentColor" opacity=".85"/>
+      </svg>`;
+    case 'bomber': // Circle + horizontal bar
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" overflow="visible">
+        <circle cx="${cx}" cy="${cx}" r="${cx*.82}" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="${cx*.3}" y1="${cx}" x2="${cx*1.7}" y2="${cx}" stroke="currentColor" stroke-width="2" opacity=".8"/>
+        <path d="M${cx} ${cx-7} L${cx+11} ${cx+3} L${cx} ${cx+1} L${cx-11} ${cx+3} Z" fill="currentColor" opacity=".85"/>
+      </svg>`;
+    case 'helo': // Circle + rotor cross
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" overflow="visible">
+        <circle cx="${cx}" cy="${cx}" r="${cx*.82}" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="${cx*.2}" y1="${cx}" x2="${cx*1.8}" y2="${cx}" stroke="currentColor" stroke-width="2.2" opacity=".85"/>
+        <line x1="${cx}" y1="${cx*.4}" x2="${cx}" y2="${cx*1.6}" stroke="currentColor" stroke-width="1.5" opacity=".6"/>
+        <circle cx="${cx}" cy="${cx}" r="3" fill="currentColor"/>
+      </svg>`;
+    // GROUND UNITS — NATO rectangle box
+    case 'mbt': // Rectangle + filled circle + gun line (tank symbol)
+      return `<svg width="${s+8}" height="${h}" viewBox="0 0 ${s+8} ${h}" overflow="visible">
+        <rect x="1" y="1" width="${s+6}" height="${h-2}" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.6" rx="1"/>
+        <circle cx="${(s+8)/2}" cy="${cy}" r="${cy*.55}" fill="currentColor" opacity=".85"/>
+        <line x1="${(s+8)/2}" y1="${cy*.45}" x2="${(s+8)*.82}" y2="${cy*.45}" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>`;
+    case 'ifv': // Rectangle + small circle + gun
+      return `<svg width="${s+8}" height="${h}" viewBox="0 0 ${s+8} ${h}" overflow="visible">
+        <rect x="1" y="1" width="${s+6}" height="${h-2}" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.6" rx="1"/>
+        <circle cx="${(s+8)/2}" cy="${cy}" r="${cy*.38}" fill="currentColor" opacity=".8"/>
+        <line x1="${(s+8)/2}" y1="${cy*.5}" x2="${(s+8)*.78}" y2="${cy*.5}" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>`;
+    case 'sam': // Rectangle + 3 missiles up (AD symbol)
+      return `<svg width="${s+8}" height="${h+8}" viewBox="0 0 ${s+8} ${h+8}" overflow="visible">
+        <rect x="1" y="${h*.4}" width="${s+6}" height="${h*.58}" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.6" rx="1"/>
+        <line x1="${(s+8)*.28}" y1="${h*.95}" x2="${(s+8)*.28}" y2="${h*.08}" stroke="currentColor" stroke-width="1.5"/>
+        <line x1="${(s+8)*.5}" y1="${h*.95}" x2="${(s+8)*.5}" y2="${h*.02}" stroke="currentColor" stroke-width="1.5"/>
+        <line x1="${(s+8)*.72}" y1="${h*.95}" x2="${(s+8)*.72}" y2="${h*.08}" stroke="currentColor" stroke-width="1.5"/>
+        <polygon points="${(s+8)*.28},${h*.08} ${(s+8)*.28-3},${h*.2} ${(s+8)*.28+3},${h*.2}" fill="currentColor"/>
+        <polygon points="${(s+8)*.5},${h*.02} ${(s+8)*.5-3},${h*.14} ${(s+8)*.5+3},${h*.14}" fill="currentColor"/>
+        <polygon points="${(s+8)*.72},${h*.08} ${(s+8)*.72-3},${h*.2} ${(s+8)*.72+3},${h*.2}" fill="currentColor"/>
+      </svg>`;
+    case 'radar': // Rectangle + parabolic dish arc
+      return `<svg width="${s+8}" height="${h}" viewBox="0 0 ${s+8} ${h}" overflow="visible">
+        <rect x="1" y="1" width="${s+6}" height="${h-2}" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.6" rx="1"/>
+        <path d="M${(s+8)*.25} ${cy*1.3} A${(s+8)*.26} ${cy*.9} 0 0 1 ${(s+8)*.75} ${cy*1.3}" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        <line x1="${(s+8)*.5}" y1="${cy*1.3}" x2="${(s+8)*.72}" y2="${cy*.3}" stroke="currentColor" stroke-width="1.6"/>
+        <circle cx="${(s+8)*.5}" cy="${cy*1.3}" r="2.5" fill="currentColor"/>
+      </svg>`;
+    case 'missile': // Vertical rectangle + nose cone + fins
+      return `<svg width="${s*.55}" height="${s}" viewBox="0 0 ${s*.55} ${s}" overflow="visible">
+        <rect x="${s*.1}" y="${s*.3}" width="${s*.35}" height="${s*.45}" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.4" rx="2"/>
+        <polygon points="${s*.275},${s*.1} ${s*.12},${s*.32} ${s*.43},${s*.32}" fill="currentColor" opacity=".9"/>
+        <line x1="${s*.12}" y1="${s*.72}" x2="${s*.04}" y2="${s*.88}" stroke="currentColor" stroke-width="1.3"/>
+        <line x1="${s*.43}" y1="${s*.72}" x2="${s*.51}" y2="${s*.88}" stroke="currentColor" stroke-width="1.3"/>
+        <line x1="${s*.06}" y1="${s*.88}" x2="${s*.24}" y2="${s*.88}" stroke="currentColor" stroke-width="1.2"/>
+        <line x1="${s*.31}" y1="${s*.88}" x2="${s*.49}" y2="${s*.88}" stroke="currentColor" stroke-width="1.2"/>
+      </svg>`;
+    case 'naval': // Elongated rectangle + mast + wave line
+      return `<svg width="${s+12}" height="${h}" viewBox="0 0 ${s+12} ${h}" overflow="visible">
+        <path d="M4 ${cy} L${s+8} ${cy} L${s+10} ${h-4} L2 ${h-4} Z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="${(s+12)/2}" y1="${cy}" x2="${(s+12)/2}" y2="2" stroke="currentColor" stroke-width="1.3"/>
+        <line x1="${(s+12)/2-7}" y1="4" x2="${(s+12)/2+7}" y2="4" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M${(s+12)*.18} ${cy+4} Q${(s+12)*.35} ${cy-2} ${(s+12)*.5} ${cy+4} Q${(s+12)*.65} ${cy+10} ${(s+12)*.82} ${cy+4}" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".6"/>
+      </svg>`;
+    case 'carrier': // Wide rectangle + flight deck line + "CVN"
+      return `<svg width="${s+22}" height="${h}" viewBox="0 0 ${s+22} ${h}" overflow="visible">
+        <path d="M3 ${cy} L${s+19} ${cy} L${s+21} ${h-3} L1 ${h-3} Z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.6"/>
+        <rect x="6" y="${cy*.8}" width="${s+10}" height="${cy*.3}" fill="currentColor" opacity=".3"/>
+        <text x="${(s+22)/2}" y="${h-6}" text-anchor="middle" font-size="8" fill="currentColor" font-family="monospace" font-weight="bold" opacity=".9">CVN</text>
+      </svg>`;
+    case 'sub': // Ellipse + sail box + periscope
+      return `<svg width="${s+8}" height="${h}" viewBox="0 0 ${s+8} ${h}" overflow="visible">
+        <ellipse cx="${(s+8)/2}" cy="${cy+4}" rx="${(s+5)/2}" ry="${cy*.58}" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.6"/>
+        <rect x="${(s+8)*.36}" y="${cy*.3}" width="${(s+8)*.28}" height="${cy*.75}" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="1.2" rx="1"/>
+        <line x1="${(s+8)*.47}" y1="${cy*.3}" x2="${(s+8)*.36}" y2="1" stroke="currentColor" stroke-width="1.2"/>
+        <line x1="${(s+8)*.36}" y1="1" x2="${(s+8)*.62}" y2="1" stroke="currentColor" stroke-width="1"/>
+      </svg>`;
+    default:
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" overflow="visible">
+        <circle cx="${cx}" cy="${cx}" r="${cx*.82}" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.6"/>
+      </svg>`;
+  }
 }
 
-const COUNTRIES = {
-  russia:{name:'Russia',color:'#c84040',flag:'🇷🇺', equipment:{
+function getCat(eq){
+  const t=eq.type.toLowerCase(), id=eq.id;
+  if(['b2','tu160','h6k'].includes(id)) return 'bomber';
+  if(['f22','f35a','f35b','su57','j20'].includes(id)) return 'stealth';
+  if(['ka52','ah64','z10'].includes(id)) return 'helo';
+  if(t.includes('heli')) return 'helo';
+  if(t.includes('bomber')) return 'bomber';
+  if(t.includes('stealth')) return 'stealth';
+  if(t.includes('fighter')||t.includes('multirole')||t.includes('interceptor')||t.includes('stovl')||t.includes('aircraft')) return 'fighter';
+  if(['cvn','type003'].includes(id)) return 'carrier';
+  if(['virginia','kilo','astute'].includes(id)||t.includes('sub')||t.includes('ssn')||t.includes('ssk')) return 'sub';
+  if(t.includes('carrier')) return 'carrier';
+  if(t.includes('frigate')||t.includes('destroyer')||t.includes('cruiser')||t.includes('corvette')) return 'naval';
+  if(t.includes('radar')||t.includes('ew')||['nebo','an_tpy2','jy26'].includes(id)) return 'radar';
+  if(t.includes('sam')||t.includes('air def')||t.includes('shorad')||t.includes('terminal')) return 'sam';
+  if(t.includes('ballistic')||t.includes('cruise')||t.includes('missile')||t.includes('rocket')||t.includes('howitzer')) return 'missile';
+  if(t.includes('mbt')||t.includes('tank')) return 'mbt';
+  if(t.includes('ifv')||t.includes('apc')||t.includes('armored')) return 'ifv';
+  return 'fighter';
+}
+
+// ═══════════════════════════════════════════════════════
+// MAP: REAL BALTIC GEOGRAPHY
+// Coordinate system: lat 46–72, lon 3–40 mapped to canvas
+// Using real simplified coastline polygons
+// ═══════════════════════════════════════════════════════
+const MAP_LAT = [73, 45];  // top, bottom
+const MAP_LON = [2, 42];   // left, right
+
+let vpX=0, vpY=0, vpZ=1; // viewport pan/zoom
+let mapW=0, mapH=0;
+
+function geoToCanvas(lat, lon) {
+  const nx = (lon - MAP_LON[0]) / (MAP_LON[1] - MAP_LON[0]);
+  const ny = (MAP_LAT[0] - lat) / (MAP_LAT[0] - MAP_LAT[1]);
+  return [
+    nx * mapW * vpZ + vpX,
+    ny * mapH * vpZ + vpY
+  ];
+}
+
+function canvasToGeo(cx, cy) {
+  const nx = (cx - vpX) / (mapW * vpZ);
+  const ny = (cy - vpY) / (mapH * vpZ);
+  const lon = nx * (MAP_LON[1] - MAP_LON[0]) + MAP_LON[0];
+  const lat = MAP_LAT[0] - ny * (MAP_LAT[0] - MAP_LAT[1]);
+  return {lat, lon};
+}
+
+// REAL simplified Baltic region coastlines [lat, lon] pairs
+// Scandinavia (Norway+Sweden peninsula)
+const SCANDINAVIA = [
+  [71.2,28],[70.5,31],[70.0,30],[69.5,29],[69.0,28],[68.5,18],[68.0,16],
+  [67.5,15],[67.0,14.5],[66.5,14],[66.0,13.5],[65.5,14],[65.0,14.5],
+  [64.5,14],[64.0,13.5],[63.5,12],[63.0,11],[62.5,10],[62.0,9],
+  [61.5,8],[61.0,7],[60.5,6],[60.0,5.5],[59.5,5],[59.0,5.5],
+  [58.5,6],[58.0,7],[57.5,8],[57.0,8.5],[57.0,12],[57.5,12],
+  [58.0,12],[58.5,11.5],[59.0,11],[59.5,11],[60.0,12],[60.5,13],
+  [61.0,13.5],[61.5,14],[62.0,14],[62.5,14.5],[63.0,14.5],[63.5,15],
+  [64.0,16],[64.5,17],[65.0,18],[65.5,18.5],[66.0,19],[66.5,20],
+  [67.0,20.5],[67.5,21],[68.0,21.5],[68.5,23],[69.0,24],[69.5,26],
+  [70.0,27],[70.5,28],[71.0,28],[71.2,28]
+];
+
+// Finland
+const FINLAND = [
+  [70.1,28],[69.5,29],[69.0,28.5],[68.5,28],[68.0,27],[67.5,26],
+  [67.0,26],[66.5,26.5],[66.0,26],[65.5,25.5],[65.0,25],[64.5,24.5],
+  [64.0,24],[63.5,23],[63.0,22],[62.5,21],[62.0,21],[61.5,21],
+  [61.0,21.5],[60.5,22],[60.0,22],[59.5,22.5],[59.0,23],[58.5,23.5],
+  [59.0,24],[59.5,24.5],[60.0,25],[60.5,25.5],[61.0,26],[61.5,27],
+  [62.0,27.5],[62.5,28],[63.0,28.5],[63.5,29],[64.0,29.5],[64.5,30],
+  [65.0,30.5],[65.5,30],[66.0,29.5],[66.5,30],[67.0,29.5],[67.5,30],
+  [68.0,29],[68.5,29],[69.0,29],[69.5,29.5],[70.1,28]
+];
+
+// Estonia+Latvia+Lithuania coast
+const BALTICS = [
+  [59.7,22.5],[59.5,24],[59.3,25],[59.0,26],[58.5,26.5],[58.0,27],
+  [57.5,27],[57.0,24.5],[56.5,21],[56.2,21],[56.0,20.5],[55.7,21],
+  [55.5,21],[55.2,22],[54.9,23],[54.6,24],[54.5,25],[54.7,25.5],
+  [55.0,25],[55.3,24.5],[55.5,24],[55.7,24.5],[56.0,24],[56.5,21],
+  [57.0,21.5],[57.5,22],[58.0,22.5],[58.5,22.5],[59.0,23],[59.5,23],
+  [59.7,22.5]
+];
+
+// Russia (Kaliningrad + main coast)
+const KALININGRAD = [
+  [55.0,19.5],[54.8,20],[54.6,21],[54.5,22],[54.7,22.5],[55.0,22],
+  [55.2,21.5],[55.1,20.5],[55.0,19.5]
+];
+
+// Russia main (western)
+const RUSSIA_WEST = [
+  [59.5,28.5],[60.0,29],[60.5,29.5],[61.0,30],[61.5,30.5],[62.0,31],
+  [62.5,31.5],[63.0,32],[63.5,33],[64.0,33.5],[64.5,34],[65.0,35],
+  [65.5,35.5],[66.0,36],[66.5,36.5],[67.0,37],[67.5,38],[68.0,39],
+  [68.5,39.5],[69.0,40],[70.0,40],[71.0,40],[72.0,40],[72.5,38],
+  [72.5,36],[72.0,34],[71.5,32],[71.0,30],[70.5,28.5],[70.1,28],
+  [69.5,29.5],[69.0,29],[68.0,29],[67.5,30],[67.0,29.5],[66.5,30],
+  [66.0,29.5],[65.5,30],[65.0,30.5],[64.5,30],[64.0,29.5],[63.5,29],
+  [63.0,28.5],[62.5,28],[62.0,27.5],[61.5,27],[61.0,26],[60.5,25.5],
+  [60.0,25],[59.5,24.5],[59.0,24],[58.5,24],[58.5,27.5],[59.0,28],
+  [59.5,28.5]
+];
+
+// Germany+Poland coast
+const GERMANY_POLAND = [
+  [54.5,8],[54.8,9],[55.0,10],[55.0,11],[54.8,12],[54.5,13],[54.2,14],
+  [54.0,14.5],[54.0,16],[54.2,17],[54.5,18],[54.7,19],[55.0,19.5],
+  [55.1,20.5],[55.2,21.5],[55.0,22],[54.7,22.5],[54.5,22],[54.6,21],
+  [54.8,20],[55.0,19.5],[54.7,19],[54.5,18],[54.2,17],[54.0,16],
+  [53.9,14.5],[53.7,13.5],[53.5,12],[53.5,10],[54.0,9],[54.5,8]
+];
+
+// Denmark
+const DENMARK = [
+  [57.5,10],[57.8,10.5],[58.0,11],[58.0,12],[57.8,12],[57.5,12],
+  [57.0,10.5],[56.5,9.5],[56.0,9],[55.5,9.5],[55.0,10],[54.8,10.5],
+  [55.0,11],[55.5,12],[56.0,12.5],[56.5,12],[57.0,11],[57.5,10]
+];
+
+// Islands: Gotland, Öland, Bornholm
+const GOTLAND = [[57.9,18.8],[57.5,18.2],[57.2,18.5],[57.3,19.1],[57.7,19.2],[57.9,18.8]];
+const BORNHOLM = [[55.3,14.8],[55.1,14.7],[55.0,15.1],[55.2,15.2],[55.3,14.8]];
+
+// Norway+Sweden fjord fill regions
+const NORWAY = [
+  [71.2,28],[71.0,28],[70.5,28],[70.0,27],[69.5,26],[69.0,24],[68.5,23],
+  [68.0,18],[67.5,15],[67.0,14.5],[66.5,14],[66.0,13.5],[65.5,14],
+  [65.0,14.5],[64.5,14],[64.0,13.5],[63.5,12],[63.0,11],[62.5,10],
+  [62.0,9],[61.5,8],[61.0,7],[60.5,6],[60.0,5.5],[59.5,5],
+  [59.0,5],[58.5,5.5],[58.0,5],[58.0,4],[60.0,4],[62.0,5],
+  [64.0,8],[65.0,11],[65.5,13],[66.0,13],[66.5,13],[67.0,14],
+  [67.5,14.5],[68.0,16],[68.5,17],[69.0,18],[69.5,20],[70.0,22],
+  [70.5,25],[71.0,28],[71.2,28]
+];
+
+// All landmasses to draw
+const LANDMASSES = [
+  {pts:NORWAY,       color:'#0d1812', stroke:'#1a3020'},
+  {pts:SCANDINAVIA,  color:'#0e1e15', stroke:'#1e3828'},
+  {pts:FINLAND,      color:'#0c1a12', stroke:'#183020'},
+  {pts:RUSSIA_WEST,  color:'#0c1812', stroke:'#182e1e'},
+  {pts:BALTICS,      color:'#0d1a13', stroke:'#1a3022'},
+  {pts:GERMANY_POLAND,color:'#0d1c14',stroke:'#1a3020'},
+  {pts:DENMARK,      color:'#0d1c14', stroke:'#1a3020'},
+  {pts:KALININGRAD,  color:'#0c1812', stroke:'#182e1e'},
+  {pts:GOTLAND,      color:'#0d1c14', stroke:'#1a3020'},
+  {pts:BORNHOLM,     color:'#0d1c14', stroke:'#1a3020'},
+];
+
+// Major cities [lat, lon, name]
+const CITIES = [
+  [59.33,18.07,'Stockholm'],[60.17,24.94,'Helsinki'],
+  [59.44,24.75,'Tallinn'],[56.95,24.11,'Riga'],
+  [54.69,25.28,'Vilnius'],[54.71,20.51,'Kaliningrad'],
+  [55.68,12.57,'Copenhagen'],[54.35,18.64,'Gdańsk'],
+  [57.70,11.97,'Gothenburg'],[60.39,5.32,'Bergen'],
+  [63.43,10.40,'Trondheim'],[65.01,25.47,'Oulu'],
+  [59.94,30.32,'St. Petersburg'],[57.00,24.00,'Tartu'],
+  [56.95,14.82,'Jönköping'],[57.50,18.50,'Visby'],
+];
+
+function drawMap(ctx) {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+  // Ocean gradient
+  const grd = ctx.createLinearGradient(0, 0, mapW, mapH);
+  grd.addColorStop(0,   '#080e18');
+  grd.addColorStop(0.5, '#07101a');
+  grd.addColorStop(1,   '#060d16');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+  // Depth shading — darker "deep water" patches
+  [[0.45,0.38,0.18,0.14],[0.28,0.52,0.14,0.10],[0.65,0.5,0.12,0.10]].forEach(([nx,ny,rw,rh])=>{
+    const [cx,cy] = geoToCanvas(MAP_LAT[0]-ny*(MAP_LAT[0]-MAP_LAT[1]), MAP_LON[0]+nx*(MAP_LON[1]-MAP_LON[0]));
+    const rx = rw * mapW * vpZ, ry = rh * mapH * vpZ;
+    const g2 = ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(rx,ry));
+    g2.addColorStop(0,'rgba(2,6,14,0.55)'); g2.addColorStop(1,'transparent');
+    ctx.fillStyle=g2; ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2); ctx.fill();
+  });
+
+  // ── LANDMASSES ──
+  LANDMASSES.forEach(({pts, color, stroke}) => {
+    if(pts.length < 2) return;
+    ctx.beginPath();
+    pts.forEach(([lat,lon], i) => {
+      const [x,y] = geoToCanvas(lat, lon);
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 0.9;
+    ctx.stroke();
+  });
+
+  // ── OCEAN SHIMMER LINES ──
+  ctx.strokeStyle = 'rgba(40,100,180,0.07)';
+  ctx.lineWidth = 0.7;
+  // Baltic Sea waves
+  for(let lat=54; lat<=65; lat+=0.8) {
+    const [,y] = geoToCanvas(lat, 10);
+    ctx.beginPath();
+    for(let lon=10; lon<=30; lon+=0.3) {
+      const [x,yy] = geoToCanvas(lat + Math.sin(lon*0.7)*0.15, lon);
+      lon===10 ? ctx.moveTo(x,yy) : ctx.lineTo(x,yy);
+    }
+    ctx.stroke();
+  }
+
+  // ── TACTICAL GRID ──
+  ctx.strokeStyle='rgba(40,100,160,0.07)';
+  ctx.lineWidth=0.5;
+  for(let lat=46; lat<=72; lat+=2) {
+    const [,y] = geoToCanvas(lat, MAP_LON[0]);
+    const [,y2] = geoToCanvas(lat, MAP_LON[1]);
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(ctx.canvas.width,y); ctx.stroke();
+  }
+  for(let lon=2; lon<=42; lon+=3) {
+    const [x] = geoToCanvas(MAP_LAT[0], lon);
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,ctx.canvas.height); ctx.stroke();
+  }
+
+  // ── COORD LABELS ──
+  ctx.fillStyle = 'rgba(40,100,160,0.28)';
+  ctx.font = `${Math.max(7, 8/vpZ)}px 'Share Tech Mono',monospace`;
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
+  for(let lat=48; lat<=70; lat+=4) {
+    for(let lon=4; lon<=40; lon+=6) {
+      const [x,y] = geoToCanvas(lat, lon);
+      if(x>0 && x<ctx.canvas.width && y>0 && y<ctx.canvas.height) {
+        ctx.fillText(`${lat}°N ${lon}°E`, x+3, y+2);
+      }
+    }
+  }
+
+  // ── CITIES ──
+  CITIES.forEach(([lat, lon, name]) => {
+    const [x,y] = geoToCanvas(lat, lon);
+    if(x<-20||x>ctx.canvas.width+20||y<-20||y>ctx.canvas.height+20) return;
+    ctx.fillStyle='rgba(100,200,140,0.6)';
+    ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(100,200,140,0.25)';
+    ctx.lineWidth=0.8;
+    ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle='rgba(120,210,155,0.5)';
+    ctx.font=`${Math.max(7,7/vpZ)}px 'Share Tech Mono',monospace`;
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText(name, x, y-7);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+const COUNTRIES={
+  russia:{name:'Russia',color:'#c04040',flag:'🇷🇺',equipment:{
     aircraft:[
       {id:'su35',name:'Su-35S Flanker-E',type:'Air Superiority Fighter',threat:'HIGH',range_km:3600,speed_mach:2.25},
       {id:'su57',name:'Su-57 Felon',type:'5th Gen Stealth Fighter',threat:'CRITICAL',range_km:3500,speed_mach:2.0},
@@ -406,61 +553,61 @@ const COUNTRIES = {
       {id:'ka52',name:'Ka-52M Alligator',type:'Attack Helicopter',threat:'HIGH',range_km:460,speed_mach:0.27},
     ],
     air_defense:[
-      {id:'s400',name:'S-400 Triumf SA-21',type:'Long-Range SAM System',threat:'CRITICAL',range_km:400,speed_mach:null},
-      {id:'s350',name:'S-350E Vityaz',type:'Med-Range SAM System',threat:'HIGH',range_km:120,speed_mach:null},
-      {id:'buk',name:'9K317M Buk-M3',type:'Med-Range SAM System',threat:'HIGH',range_km:70,speed_mach:null},
-      {id:'tor',name:'9K332 Tor-M2',type:'Short-Range SAM',threat:'MEDIUM',range_km:16,speed_mach:null},
-      {id:'nebo',name:'55Zh6M Nebo-M',type:'VHF Counter-Stealth Radar',threat:'HIGH',range_km:600,speed_mach:null},
+      {id:'s400',name:'S-400 Triumf SA-21',type:'Long-Range SAM System',threat:'CRITICAL',range_km:400},
+      {id:'s350',name:'S-350E Vityaz',type:'Med-Range SAM System',threat:'HIGH',range_km:120},
+      {id:'buk',name:'9K317M Buk-M3',type:'Med-Range SAM System',threat:'HIGH',range_km:70},
+      {id:'tor',name:'9K332 Tor-M2',type:'Short-Range SAM',threat:'MEDIUM',range_km:16},
+      {id:'nebo',name:'55Zh6M Nebo-M',type:'VHF Counter-Stealth Radar',threat:'HIGH',range_km:600},
     ],
     missiles:[
-      {id:'iskander',name:'9K720 Iskander-M',type:'Short-Range Ballistic Missile',threat:'CRITICAL',range_km:500,speed_mach:6.0},
+      {id:'iskander',name:'9K720 Iskander-M',type:'Short-Range Ballistic Missile',threat:'CRITICAL',range_km:500,speed_mach:6},
       {id:'kalibr',name:'3M-54 Kalibr',type:'Land-Attack Cruise Missile',threat:'CRITICAL',range_km:2500,speed_mach:0.8},
-      {id:'kinzhal',name:'Kh-47M2 Kinzhal',type:'Air-Launched Hypersonic Missile',threat:'CRITICAL',range_km:2000,speed_mach:10.0},
-      {id:'tochka',name:'9K79-1 Tochka-U',type:'Tactical Ballistic Missile',threat:'HIGH',range_km:185,speed_mach:5.0},
+      {id:'kinzhal',name:'Kh-47M2 Kinzhal',type:'Hypersonic Air-Launched Missile',threat:'CRITICAL',range_km:2000,speed_mach:10},
+      {id:'tochka',name:'9K79 Tochka-U',type:'Tactical Ballistic Missile',threat:'HIGH',range_km:185,speed_mach:5},
     ],
     naval:[
-      {id:'gorshkov',name:'Gorshkov-class FFG',type:'Guided Missile Frigate',threat:'CRITICAL',range_km:4500,speed_mach:null},
-      {id:'karakurt',name:'Karakurt-class Corvette',type:'Missile Corvette',threat:'HIGH',range_km:2500,speed_mach:null},
-      {id:'kilo',name:'Improved Kilo-class SSK',type:'Diesel-Electric Submarine',threat:'HIGH',range_km:6000,speed_mach:null},
+      {id:'gorshkov',name:'Gorshkov-class FFG',type:'Guided Missile Frigate',threat:'CRITICAL',range_km:4500},
+      {id:'karakurt',name:'Karakurt-class Corvette',type:'Missile Corvette',threat:'HIGH',range_km:2500},
+      {id:'kilo',name:'Kilo-class SSK',type:'Diesel-Electric Submarine',threat:'HIGH',range_km:6000},
     ],
     ground:[
-      {id:'t90',name:'T-90M Proryv-3',type:'Main Battle Tank',threat:'HIGH',range_km:550,speed_mach:null},
-      {id:'t80',name:'T-80BVM',type:'Main Battle Tank',threat:'HIGH',range_km:440,speed_mach:null},
-      {id:'bmp3',name:'BMP-3 IFV',type:'Infantry Fighting Vehicle',threat:'MEDIUM',range_km:600,speed_mach:null},
+      {id:'t90',name:'T-90M Proryv-3',type:'Main Battle Tank',threat:'HIGH',range_km:550},
+      {id:'t80',name:'T-80BVM',type:'Main Battle Tank',threat:'HIGH',range_km:440},
+      {id:'bmp3',name:'BMP-3',type:'Infantry Fighting Vehicle',threat:'MEDIUM',range_km:600},
     ],
   }},
-  usa:{name:'United States',color:'#3060b8',flag:'🇺🇸', equipment:{
+  usa:{name:'United States',color:'#3060b8',flag:'🇺🇸',equipment:{
     aircraft:[
       {id:'f35a',name:'F-35A Lightning II',type:'Stealth Multirole Fighter',threat:'CRITICAL',range_km:2220,speed_mach:1.6},
       {id:'f22',name:'F-22A Raptor',type:'Air Dominance Fighter',threat:'CRITICAL',range_km:2960,speed_mach:2.25},
-      {id:'b2',name:'B-2A Spirit',type:'Stealth Strategic Bomber',threat:'CRITICAL',range_km:11100,speed_mach:0.95},
+      {id:'b2',name:'B-2A Spirit',type:'Strategic Bomber',threat:'CRITICAL',range_km:11100,speed_mach:0.95},
       {id:'f16',name:'F-16C Block 70',type:'Multirole Fighter',threat:'HIGH',range_km:3200,speed_mach:2.05},
       {id:'ah64',name:'AH-64E Apache',type:'Attack Helicopter',threat:'HIGH',range_km:450,speed_mach:0.27},
     ],
     air_defense:[
-      {id:'patriot',name:'MIM-104F Patriot PAC-3',type:'Long-Range SAM System',threat:'CRITICAL',range_km:160,speed_mach:null},
-      {id:'thaad',name:'AN/TPY-2 THAAD',type:'Terminal High Altitude Defense',threat:'CRITICAL',range_km:200,speed_mach:null},
-      {id:'nasams',name:'NASAMS III',type:'Med-Range SAM System',threat:'HIGH',range_km:40,speed_mach:null},
-      {id:'an_tpy2',name:'AN/TPY-2 Radar',type:'Theatre Missile Defense Radar',threat:'HIGH',range_km:1000,speed_mach:null},
+      {id:'patriot',name:'MIM-104F Patriot PAC-3',type:'Long-Range SAM System',threat:'CRITICAL',range_km:160},
+      {id:'thaad',name:'THAAD',type:'Terminal High-Altitude Defense',threat:'CRITICAL',range_km:200},
+      {id:'nasams',name:'NASAMS III',type:'Med-Range SAM System',threat:'HIGH',range_km:40},
+      {id:'an_tpy2',name:'AN/TPY-2 Radar',type:'Theatre Missile Defense Radar',threat:'HIGH',range_km:1000},
     ],
     missiles:[
       {id:'atacms',name:'MGM-140B ATACMS',type:'Short-Range Ballistic Missile',threat:'CRITICAL',range_km:300,speed_mach:3.5},
-      {id:'tomahawk',name:'BGM-109 Tomahawk Block V',type:'Land-Attack Cruise Missile',threat:'CRITICAL',range_km:2500,speed_mach:0.72},
-      {id:'himars',name:'M270/HIMARS MLRS',type:'Multiple Launch Rocket System',threat:'HIGH',range_km:80,speed_mach:3.0},
+      {id:'tomahawk',name:'BGM-109 Tomahawk',type:'Land-Attack Cruise Missile',threat:'CRITICAL',range_km:2500,speed_mach:0.72},
+      {id:'himars',name:'M270/HIMARS MLRS',type:'Multiple Launch Rocket System',threat:'HIGH',range_km:80,speed_mach:3},
       {id:'jassm',name:'AGM-158C JASSM-ER',type:'Air-Launched Standoff Missile',threat:'CRITICAL',range_km:1000,speed_mach:0.85},
     ],
     naval:[
-      {id:'burke',name:'Arleigh Burke DDG',type:'Guided Missile Destroyer',threat:'CRITICAL',range_km:5000,speed_mach:null},
-      {id:'virginia',name:'Virginia-class SSN',type:'Nuclear Attack Submarine',threat:'CRITICAL',range_km:null,speed_mach:null},
-      {id:'cvn',name:'Gerald R. Ford CVN',type:'Nuclear Aircraft Carrier',threat:'CRITICAL',range_km:null,speed_mach:null},
+      {id:'burke',name:'Arleigh Burke DDG',type:'Guided Missile Destroyer',threat:'CRITICAL',range_km:5000},
+      {id:'virginia',name:'Virginia-class SSN',type:'Nuclear Attack Submarine',threat:'CRITICAL'},
+      {id:'cvn',name:'Gerald R. Ford CVN',type:'Nuclear Aircraft Carrier',threat:'CRITICAL'},
     ],
     ground:[
-      {id:'m1a2',name:'M1A2 SEPv3 Abrams',type:'Main Battle Tank',threat:'HIGH',range_km:425,speed_mach:null},
-      {id:'bradley',name:'M2A4 Bradley IFV',type:'Infantry Fighting Vehicle',threat:'MEDIUM',range_km:480,speed_mach:null},
-      {id:'stryker',name:'Stryker DVH',type:'Armored Personnel Carrier',threat:'MEDIUM',range_km:500,speed_mach:null},
+      {id:'m1a2',name:'M1A2 SEPv3 Abrams',type:'Main Battle Tank',threat:'HIGH',range_km:425},
+      {id:'bradley',name:'M2A4 Bradley',type:'Infantry Fighting Vehicle',threat:'MEDIUM',range_km:480},
+      {id:'stryker',name:'Stryker DVH',type:'Armored Personnel Carrier',threat:'MEDIUM',range_km:500},
     ],
   }},
-  china:{name:'China PLA',color:'#b08820',flag:'🇨🇳', equipment:{
+  china:{name:'China PLA',color:'#b08820',flag:'🇨🇳',equipment:{
     aircraft:[
       {id:'j20',name:'J-20A Mighty Dragon',type:'5th Gen Stealth Fighter',threat:'CRITICAL',range_km:2700,speed_mach:2.0},
       {id:'j16',name:'J-16 Strike Fighter',type:'Heavy Strike Fighter',threat:'HIGH',range_km:3900,speed_mach:2.4},
@@ -468,248 +615,60 @@ const COUNTRIES = {
       {id:'z10',name:'Z-10ME Thunderbolt',type:'Attack Helicopter',threat:'HIGH',range_km:800,speed_mach:0.26},
     ],
     air_defense:[
-      {id:'hq9',name:'HQ-9B',type:'Long-Range SAM System',threat:'CRITICAL',range_km:200,speed_mach:null},
-      {id:'hq16',name:'HQ-16C',type:'Med-Range SAM System',threat:'HIGH',range_km:70,speed_mach:null},
-      {id:'hq17',name:'HQ-17A',type:'Short-Range SAM',threat:'MEDIUM',range_km:20,speed_mach:null},
-      {id:'jy26',name:'JY-26 Skywatch-U',type:'VHF Counter-Stealth Radar',threat:'HIGH',range_km:500,speed_mach:null},
+      {id:'hq9',name:'HQ-9B',type:'Long-Range SAM System',threat:'CRITICAL',range_km:200},
+      {id:'hq16',name:'HQ-16C',type:'Med-Range SAM System',threat:'HIGH',range_km:70},
+      {id:'hq17',name:'HQ-17A',type:'Short-Range SAM',threat:'MEDIUM',range_km:20},
+      {id:'jy26',name:'JY-26 Skywatch-U',type:'VHF Counter-Stealth Radar',threat:'HIGH',range_km:500},
     ],
     missiles:[
-      {id:'df21d',name:'DF-21D ASBM',type:'Anti-Ship Ballistic Missile',threat:'CRITICAL',range_km:1800,speed_mach:10.0},
-      {id:'df26',name:'DF-26 Guam Killer',type:'Intermediate-Range Ballistic',threat:'CRITICAL',range_km:4000,speed_mach:18.0},
+      {id:'df21d',name:'DF-21D ASBM',type:'Anti-Ship Ballistic Missile',threat:'CRITICAL',range_km:1800,speed_mach:10},
+      {id:'df26',name:'DF-26',type:'Intermediate-Range Ballistic Missile',threat:'CRITICAL',range_km:4000,speed_mach:18},
       {id:'cx10a',name:'CX-1 Supersonic ASCM',type:'Anti-Ship Cruise Missile',threat:'HIGH',range_km:280,speed_mach:2.5},
     ],
     naval:[
-      {id:'type055',name:'Type 055 Renhai',type:'Guided Missile Cruiser',threat:'CRITICAL',range_km:5000,speed_mach:null},
-      {id:'type052d',name:'Type 052D Destroyer',type:'Guided Missile Destroyer',threat:'HIGH',range_km:4500,speed_mach:null},
-      {id:'type003',name:'Fujian CVN-003',type:'CATOBAR Aircraft Carrier',threat:'CRITICAL',range_km:null,speed_mach:null},
+      {id:'type055',name:'Type 055 Renhai',type:'Guided Missile Cruiser',threat:'CRITICAL',range_km:5000},
+      {id:'type052d',name:'Type 052D Destroyer',type:'Guided Missile Destroyer',threat:'HIGH',range_km:4500},
+      {id:'type003',name:'Fujian CVN-003',type:'CATOBAR Aircraft Carrier',threat:'CRITICAL'},
     ],
     ground:[
-      {id:'ztz99',name:'ZTZ-99A',type:'Main Battle Tank',threat:'HIGH',range_km:600,speed_mach:null},
-      {id:'zbd04',name:'ZBD-04A IFV',type:'Infantry Fighting Vehicle',threat:'MEDIUM',range_km:500,speed_mach:null},
+      {id:'ztz99',name:'ZTZ-99A',type:'Main Battle Tank',threat:'HIGH',range_km:600},
+      {id:'zbd04',name:'ZBD-04A',type:'Infantry Fighting Vehicle',threat:'MEDIUM',range_km:500},
     ],
   }},
-  nato:{name:'NATO',color:'#207050',flag:'🌐', equipment:{
+  nato:{name:'NATO',color:'#208050',flag:'🌐',equipment:{
     aircraft:[
-      {id:'eurofighter',name:'Eurofighter Typhoon T3',type:'Air Superiority Fighter',threat:'HIGH',range_km:3790,speed_mach:2.0},
+      {id:'eurofighter',name:'Eurofighter Typhoon',type:'Air Superiority Fighter',threat:'HIGH',range_km:3790,speed_mach:2.0},
       {id:'rafale',name:'Dassault Rafale F4',type:'Omnirole Fighter',threat:'HIGH',range_km:3700,speed_mach:1.8},
       {id:'gripen',name:'JAS 39E Gripen',type:'Multirole Fighter',threat:'HIGH',range_km:3000,speed_mach:2.0},
       {id:'f35b',name:'F-35B Lightning II',type:'STOVL Stealth Fighter',threat:'CRITICAL',range_km:1670,speed_mach:1.6},
     ],
     air_defense:[
-      {id:'aster30',name:'Aster 30 SAMP/T NG',type:'Med-Range SAM System',threat:'HIGH',range_km:120,speed_mach:null},
-      {id:'iris_t',name:'IRIS-T SLM',type:'Short-Range SAM',threat:'HIGH',range_km:40,speed_mach:null},
-      {id:'hawk',name:'MIM-23 HAWK XXI',type:'Med-Range SAM System',threat:'MEDIUM',range_km:50,speed_mach:null},
+      {id:'aster30',name:'Aster 30 SAMP/T',type:'Med-Range SAM System',threat:'HIGH',range_km:120},
+      {id:'iris_t',name:'IRIS-T SLM',type:'Short-Range SAM',threat:'HIGH',range_km:40},
+      {id:'hawk',name:'MIM-23 HAWK XXI',type:'Med-Range SAM System',threat:'MEDIUM',range_km:50},
     ],
     missiles:[
       {id:'scalp',name:'SCALP-EG / Storm Shadow',type:'Air-Launched Cruise Missile',threat:'CRITICAL',range_km:560,speed_mach:0.9},
-      {id:'meteor',name:'Meteor BVRAAM',type:'Beyond Visual Range AAM',threat:'CRITICAL',range_km:200,speed_mach:4.0},
-      {id:'pzh2000',name:'PzH 2000',type:'Self-Propelled Howitzer',threat:'HIGH',range_km:56,speed_mach:null},
+      {id:'meteor',name:'Meteor BVRAAM',type:'Beyond Visual Range AAM',threat:'CRITICAL',range_km:200,speed_mach:4},
+      {id:'pzh2000',name:'PzH 2000',type:'Self-Propelled Howitzer',threat:'HIGH',range_km:56},
     ],
     naval:[
-      {id:'fremm',name:'FREMM Multi-Mission Frigate',type:'Multi-Mission Frigate',threat:'HIGH',range_km:6500,speed_mach:null},
-      {id:'type45',name:'Type 45 Daring DDG',type:'Air Defence Destroyer',threat:'HIGH',range_km:7000,speed_mach:null},
-      {id:'astute',name:'Astute-class SSN',type:'Nuclear Attack Submarine',threat:'CRITICAL',range_km:null,speed_mach:null},
+      {id:'fremm',name:'FREMM Frigate',type:'Multi-Mission Frigate',threat:'HIGH',range_km:6500},
+      {id:'type45',name:'Type 45 Daring',type:'Air Defence Destroyer',threat:'HIGH',range_km:7000},
+      {id:'astute',name:'Astute-class SSN',type:'Nuclear Attack Submarine',threat:'CRITICAL'},
     ],
     ground:[
-      {id:'leopard2a7',name:'Leopard 2A7+',type:'Main Battle Tank',threat:'HIGH',range_km:500,speed_mach:null},
-      {id:'challenger3',name:'Challenger 3',type:'Main Battle Tank',threat:'HIGH',range_km:450,speed_mach:null},
-      {id:'cv90',name:'CV90 Mk.IV IFV',type:'Infantry Fighting Vehicle',threat:'MEDIUM',range_km:600,speed_mach:null},
+      {id:'leopard2a7',name:'Leopard 2A7+',type:'Main Battle Tank',threat:'HIGH',range_km:500},
+      {id:'challenger3',name:'Challenger 3',type:'Main Battle Tank',threat:'HIGH',range_km:450},
+      {id:'cv90',name:'CV90 Mk.IV',type:'Infantry Fighting Vehicle',threat:'MEDIUM',range_km:600},
     ],
   }},
 };
-
 const CATS=['aircraft','air_defense','missiles','naval','ground'];
 const CLBL={aircraft:'Aircraft',air_defense:'Air Defense',missiles:'Missiles',naval:'Naval',ground:'Ground'};
 
-// ═══════════════════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════════════════
-let MAP, UID=1;
-let units=[], selCtry='russia', selCat='aircraft';
-let placing=null, selUnitId=null, targetingUnitId=null;
-let briefingOn=false;
-let activeSim=null, simRAF=null;
-let engagements=[]; // {srcId, dstId|null, dstLat, dstLng, state, t}
-
-// ═══════════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════
-window.addEventListener('DOMContentLoaded', () => {
-  MAP = L.map('map', { center:[58.5,18], zoom:6, zoomControl:false, attributionControl:false });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-    maxZoom:19, subdomains:'abcd'
-  }).addTo(MAP);
-
-  MAP.on('click', onMapClick);
-  MAP.on('zoomend moveend', redrawEngagements);
-
-  const canvas=document.getElementById('overlay');
-  const wrap=document.getElementById('map-wrap');
-  function resize(){ canvas.width=wrap.offsetWidth; canvas.height=wrap.offsetHeight; redrawEngagements(); }
-  resize();
-  new ResizeObserver(resize).observe(wrap);
-
-  // ESC cancels modes
-  document.addEventListener('keydown', e=>{
-    if(e.key==='Escape'){ cancelPlace(); cancelTargeting(); }
-  });
-
-  buildUI();
-  renderOOB();
-  renderUnitList();
-});
-
-// ═══════════════════════════════════════════════════════════════
-// MAP INTERACTION
-// ═══════════════════════════════════════════════════════════════
-function onMapClick(e) {
-  if(placing) { placeUnit(e.latlng.lat, e.latlng.lng); return; }
-  if(targetingUnitId) { setTargetLocation(e.latlng.lat, e.latlng.lng); return; }
-}
-
-function placeUnit(lat, lng) {
-  const u={ id:UID++, country:selCtry, ...placing, lat, lng, _marker:null };
-  units.push(u);
-  addMarker(u);
-  cancelPlace();
-  buildNationList(); renderOOB(); renderUnitList(); buildEqList();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// MARKERS — real silhouette icons
-// ═══════════════════════════════════════════════════════════════
-function makeMarkerHTML(u, forceSelected) {
-  const isSel = forceSelected || u.id===selUnitId;
-  const isTgt = targetingUnitId && u.id!==targetingUnitId;
-  const isSrc = u.id===targetingUnitId;
-  const cc = COUNTRIES[u.country].color;
-  const tc = TC[u.threat];
-  const svg = getSilhouette(u);
-  const classes = ['um-wrap', isSel?'selected':'', isSrc?'targeting-source':''].filter(Boolean).join(' ');
-  // Threat ring
-  const ring = isSel ? `<div style="position:absolute;inset:-4px;border:1px solid ${cc};border-radius:2px;opacity:0.5;pointer-events:none"></div>` : '';
-  // Target indicator if this unit is being targeted
-  const isEngaged = engagements.some(e=>e.dstId===u.id);
-  const tgtRing = isEngaged ? `<div style="position:absolute;inset:-6px;border:1px dashed ${TC.CRITICAL};border-radius:2px;opacity:0.6;pointer-events:none;animation:pulse-border .7s infinite"></div>` : '';
-
-  return `<div class="${classes}" style="color:${cc};position:relative">
-    ${ring}${tgtRing}
-    ${svg}
-    <div class="um-label" style="color:${cc};border-color:${cc}55;font-size:7px">${u.name}</div>
-    <div style="position:absolute;top:-3px;right:-3px;width:5px;height:5px;background:${tc};border-radius:50;box-shadow:0 0 3px ${tc}"></div>
-  </div>`;
-}
-
-function addMarker(u) {
-  const icon = L.divIcon({ html:makeMarkerHTML(u), className:'umarker', iconSize:[1,1], iconAnchor:[14,14] });
-  const m = L.marker([u.lat, u.lng], { icon, draggable:true }).addTo(MAP);
-  m.on('click', ev => { L.DomEvent.stopPropagation(ev); onUnitClick(u.id); });
-  m.on('dragend', ev => {
-    const{lat,lng}=ev.target.getLatLng();
-    u.lat=lat; u.lng=lng;
-    redrawEngagements();
-  });
-  u._marker = m;
-}
-
-function refreshMarker(u) {
-  if(!u._marker) return;
-  u._marker.setIcon(L.divIcon({ html:makeMarkerHTML(u), className:'umarker', iconSize:[1,1], iconAnchor:[14,14] }));
-}
-
-function onUnitClick(id) {
-  if(targetingUnitId && id!==targetingUnitId) {
-    // Set this unit as target
-    setTargetUnit(id);
-    return;
-  }
-  selectUnit(id);
-}
-
-function selectUnit(id) {
-  const prev=selUnitId;
-  selUnitId=id;
-  if(prev){ const u=units.find(u=>u.id===prev); if(u) refreshMarker(u); }
-  const u=units.find(u=>u.id===id);
-  if(u){ refreshMarker(u); renderProfile(u); }
-  renderUnitList();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// TARGETING
-// ═══════════════════════════════════════════════════════════════
-function startTargeting(unitId) {
-  targetingUnitId=unitId;
-  const wrap=document.getElementById('map-wrap');
-  wrap.classList.add('targeting');
-  document.getElementById('targeting-hint').style.display='block';
-  // Refresh all markers to show targeting state
-  units.forEach(u=>refreshMarker(u));
-}
-
-function cancelTargeting() {
-  targetingUnitId=null;
-  document.getElementById('map-wrap').classList.remove('targeting');
-  document.getElementById('targeting-hint').style.display='none';
-  units.forEach(u=>refreshMarker(u));
-}
-
-function setTargetUnit(targetId) {
-  const srcId=targetingUnitId;
-  cancelTargeting();
-  const src=units.find(u=>u.id===srcId);
-  const dst=units.find(u=>u.id===targetId);
-  if(!src||!dst||src.id===dst.id) return;
-  addEngagement(srcId, targetId, dst.lat, dst.lng);
-  selectUnit(srcId);
-}
-
-function setTargetLocation(lat, lng) {
-  const srcId=targetingUnitId;
-  cancelTargeting();
-  addEngagement(srcId, null, lat, lng);
-  selectUnit(srcId);
-}
-
-function addEngagement(srcId, dstId, lat, lng) {
-  // Remove any previous engagement from this source
-  engagements=engagements.filter(e=>e.srcId!==srcId);
-  engagements.push({ srcId, dstId, dstLat:lat, dstLng:lng, state:{P:[]}, t:0 });
-  if(dstId){ const u=units.find(u=>u.id===dstId); if(u) refreshMarker(u); }
-  redrawEngagements();
-  renderProfile(units.find(u=>u.id===srcId));
-  renderEngagementPanel(srcId);
-  startEngagementSim(srcId);
-}
-
-function removeEngagement(srcId) {
-  const e=engagements.find(e=>e.srcId===srcId);
-  if(e?.dstId){ const u=units.find(u=>u.id===e.dstId); if(u) refreshMarker(u); }
-  engagements=engagements.filter(e=>e.srcId!==srcId);
-  document.getElementById('engagement-panel').style.display='none';
-  redrawEngagements();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// ENGAGEMENT SIMULATION (on-map canvas)
-// ═══════════════════════════════════════════════════════════════
-function ll2px(lat, lng) {
-  const pt=MAP.latLngToContainerPoint([lat,lng]);
-  return{x:pt.x, y:pt.y};
-}
-
-class Ptcl {
-  constructor(x,y,vx,vy,life,color,r=2){Object.assign(this,{x,y,vx,vy,life,ml:life,color,r});}
-  tick(){this.x+=this.vx;this.y+=this.vy;this.vy+=.035;this.vx*=.98;this.vy*=.98;this.life--;}
-  draw(ctx){ctx.globalAlpha=(this.life/this.ml)*.85;ctx.fillStyle=this.color;ctx.beginPath();ctx.arc(this.x,this.y,Math.max(.1,this.r*(this.life/this.ml)),0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
-  get dead(){return this.life<=0;}
-}
-function burst(P,x,y,c1,c2,n=35){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=Math.random()*5+.5;P.push(new Ptcl(x,y,Math.cos(a)*s,Math.sin(a)*s,~~(Math.random()*32+12),Math.random()>.5?c1:c2,Math.random()*2.5+.5));}}
-function smk(P,x,y,c='rgba(180,180,180,.35)'){P.push(new Ptcl(x+(Math.random()-.5)*3,y+(Math.random()-.5)*3,(Math.random()-.5)*.4,-Math.random()*.25,~~(Math.random()*25+12),c,Math.random()*3+1.5));}
-
-function getSimType(id) {
-  const m={
-    su35:'dogfight',su57:'stealth',mig31:'dogfight',tu160:'cruise',ka52:'helicopter',
+function simType(id){
+  const m={su35:'dogfight',su57:'stealth',mig31:'dogfight',tu160:'cruise',ka52:'helicopter',
     f35a:'stealth',f22:'dogfight',b2:'stealth',f16:'dogfight',ah64:'helicopter',
     j20:'stealth',j16:'dogfight',h6k:'cruise',z10:'helicopter',
     eurofighter:'dogfight',rafale:'dogfight',gripen:'dogfight',f35b:'stealth',
@@ -719,502 +678,613 @@ function getSimType(id) {
     iskander:'ballistic',kalibr:'cruise',kinzhal:'ballistic',tochka:'ballistic',
     atacms:'ballistic',tomahawk:'cruise',himars:'ballistic',jassm:'cruise',
     df21d:'ballistic',df26:'ballistic',cx10a:'cruise',scalp:'cruise',meteor:'dogfight',pzh2000:'ballistic',
-    gorshkov:'naval',karakurt:'naval',kilo:'antiship',
-    burke:'naval',virginia:'antiship',cvn:'naval',
-    type055:'naval',type052d:'naval',type003:'naval',fremm:'naval',type45:'naval',astute:'antiship',
+    gorshkov:'naval',karakurt:'naval',kilo:'torpedo',burke:'naval',virginia:'torpedo',cvn:'naval',
+    type055:'naval',type052d:'naval',type003:'naval',fremm:'naval',type45:'naval',astute:'torpedo',
     t90:'armor',t80:'armor',bmp3:'armor',m1a2:'armor',bradley:'armor',stryker:'armor',
-    ztz99:'armor',zbd04:'armor',leopard2a7:'armor',challenger3:'armor',cv90:'armor',
-  };
+    ztz99:'armor',zbd04:'armor',leopard2a7:'armor',challenger3:'armor',cv90:'armor'};
   return m[id]||'ballistic';
 }
 
-let animRunning=false;
-function startEngagementSim(srcId) {
-  if(!animRunning){ animRunning=true; requestAnimationFrame(animLoop); }
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let UID=1, units=[], engs=[];
+let selCtry='russia', selCat='aircraft';
+let placing=null, selId=null, tgtSrc=null, briefOn=false;
+let isDragging=false, dragUnit=null;
+let panStart=null, panOrigin=null;
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', ()=>{
+  const mc=document.getElementById('mc');
+  const oc=document.getElementById('oc');
+  const mw=document.getElementById('mw');
+
+  function resize(){
+    mapW=mw.offsetWidth; mapH=mw.offsetHeight;
+    mc.width=oc.width=mapW; mc.height=oc.height=mapH;
+    // Default view centered on Baltic
+    if(vpX===0&&vpY===0&&vpZ===1) resetView();
+    else renderAll();
+  }
+
+  new ResizeObserver(resize).observe(mw);
+  resize();
+
+  // Map drag/pan
+  mc.addEventListener('mousedown', onMDown);
+  mc.addEventListener('wheel', onWheel, {passive:false});
+  window.addEventListener('mousemove', onMMove);
+  window.addEventListener('mouseup', onMUp);
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape'){cancelPlace();cancelTargeting();} });
+
+  buildUI(); renderOOB(); renderUnitList();
+  requestAnimationFrame(animLoop);
+});
+
+function resetView(){
+  // Center on Baltic Sea: lat~58, lon~20
+  const [cx,cy] = [mapW*0.5, mapH*0.5];
+  vpZ = 1.4;
+  const [tx,ty] = [(20-MAP_LON[0])/(MAP_LON[1]-MAP_LON[0])*mapW, (MAP_LAT[0]-57)/(MAP_LAT[0]-MAP_LAT[1])*mapH];
+  vpX = cx - tx*vpZ;
+  vpY = cy - ty*vpZ;
+  renderAll();
 }
-function stopSim() {
-  engagements.forEach(e=>{ e.state={P:[]}; e.t=0; });
-  document.getElementById('endsim-btn').style.display='none';
-  document.getElementById('sim-hud').style.display='none';
-  document.getElementById('engagement-panel').style.display='none';
-  const canvas=document.getElementById('overlay');
-  canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
-  activeSim=null;
+
+function zoom(factor){
+  const cx=mapW/2, cy=mapH/2;
+  vpX = cx - (cx-vpX)*factor;
+  vpY = cy - (cy-vpY)*factor;
+  vpZ *= factor;
+  renderAll();
 }
 
-function animLoop() {
-  if(engagements.length===0){ animRunning=false; return; }
-  const canvas=document.getElementById('overlay');
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+function onWheel(e){
+  e.preventDefault();
+  const f = e.deltaY<0 ? 1.12 : 1/1.12;
+  const r = document.getElementById('mc').getBoundingClientRect();
+  const mx=e.clientX-r.left, my=e.clientY-r.top;
+  vpX = mx-(mx-vpX)*f; vpY = my-(my-vpY)*f; vpZ*=f;
+  renderAll();
+}
 
-  engagements.forEach(eng => {
-    const src=units.find(u=>u.id===eng.srcId);
-    if(!src) return;
-    const sp=ll2px(src.lat,src.lng);
-    const dp=ll2px(eng.dstLat,eng.dstLng);
+let _panStart=null, _panVP=null;
+function onMDown(e){
+  if(e.button===0){
+    // Check if clicking on a unit
+    const {lat,lon}=canvasToGeo(e.offsetX,e.offsetY);
+    const hit=hitTest(e.offsetX,e.offsetY);
+    if(hit){
+      if(tgtSrc && hit.id!==tgtSrc){ confirmTarget(null, hit.id); return; }
+      dragUnit=hit; isDragging=false;
+      return;
+    }
+    if(placing||tgtSrc){ return; } // handled by click
+    _panStart={x:e.clientX,y:e.clientY};
+    _panVP={x:vpX,y:vpY};
+  }
+}
+function onMMove(e){
+  if(dragUnit){
+    isDragging=true;
+    const r=document.getElementById('mc').getBoundingClientRect();
+    const {lat,lon}=canvasToGeo(e.clientX-r.left,e.clientY-r.top);
+    dragUnit.lat=lat; dragUnit.lon=lon;
+    // Update engagement targets
+    engs.forEach(eg=>{ if(eg.dstId===dragUnit.id){eg.dstLat=lat;eg.dstLon=lon;} });
+    updateUnitMarker(dragUnit); renderAll(); return;
+  }
+  if(_panStart){
+    vpX=_panVP.x+(e.clientX-_panStart.x);
+    vpY=_panVP.y+(e.clientY-_panStart.y);
+    renderAll();
+  }
+}
+function onMUp(e){
+  if(dragUnit){
+    if(!isDragging) onUnitClick(dragUnit.id);
+    dragUnit=null; isDragging=false; return;
+  }
+  _panStart=null; _panVP=null;
+  if(e.button===0&&!isDragging){
+    const r=document.getElementById('mc').getBoundingClientRect();
+    const cx=e.clientX-r.left, cy2=e.clientY-r.top;
+    const {lat,lon}=canvasToGeo(cx,cy2);
+    if(placing){ placeUnit(lat,lon); return; }
+    if(tgtSrc){ confirmTarget(lat,lon,null); return; }
+  }
+}
 
+function hitTest(cx,cy){
+  return units.find(u=>{
+    const [ux,uy]=geoToCanvas(u.lat,u.lon);
+    return Math.hypot(ux-cx,uy-cy)<22;
+  })||null;
+}
+
+// ═══════════════════════════════════════════════════════
+// UNIT MARKERS (positioned HTML divs over canvas)
+// ═══════════════════════════════════════════════════════
+function createUnitMarker(u){
+  const cc=COUNTRIES[u.country].color;
+  const tc=TC[u.threat];
+  const el=document.createElement('div');
+  el.className='unit-icon';
+  el.id=`um-${u.id}`;
+  el.style.color=cc;
+  el.innerHTML=`
+    <div style="position:relative;display:inline-block">
+      <div id="um-tgtring-${u.id}" class="tgt-ring" style="display:none"></div>
+      ${milSym(getCat(u),28)}
+      <div style="position:absolute;top:-3px;right:-3px;width:6px;height:6px;background:${tc};border-radius:50%;box-shadow:0 0 4px ${tc}"></div>
+    </div>
+    <div class="unit-lbl" style="color:${cc};border-color:${cc}60">${u.name}</div>`;
+  el.addEventListener('mousedown', e=>{ e.stopPropagation(); });
+  document.getElementById('unit-layer').appendChild(el);
+  u._el=el;
+  updateUnitMarker(u);
+}
+
+function updateUnitMarker(u){
+  if(!u._el) return;
+  const [x,y]=geoToCanvas(u.lat,u.lon);
+  u._el.style.left=x+'px';
+  u._el.style.top=y+'px';
+  const isSel=u.id===selId, isSrc=u.id===tgtSrc;
+  u._el.className='unit-icon'+(isSel?' sel':'')+(isSrc?' tgt-src':'');
+  const ring=document.getElementById(`um-tgtring-${u.id}`);
+  if(ring) ring.style.display=engs.some(e=>e.dstId===u.id)?'block':'none';
+}
+
+function updateAllMarkers(){ units.forEach(updateUnitMarker); }
+
+function placeUnit(lat,lon){
+  const u={id:UID++,country:selCtry,...placing,lat,lon,_el:null};
+  units.push(u); createUnitMarker(u); cancelPlace();
+  buildNationList(); renderOOB(); renderUnitList(); buildEqList();
+}
+
+function onUnitClick(id){
+  if(tgtSrc && id!==tgtSrc){ confirmTarget(null,id); return; }
+  selectUnit(id);
+}
+
+function selectUnit(id){
+  const prev=selId; selId=id;
+  if(prev){ const u=units.find(u=>u.id===prev); if(u) updateUnitMarker(u); }
+  const u=units.find(u=>u.id===id);
+  if(u){ updateUnitMarker(u); renderProfile(u); }
+  renderUnitList();
+}
+
+// ═══════════════════════════════════════════════════════
+// TARGETING
+// ═══════════════════════════════════════════════════════
+function startTargeting(uid){
+  tgtSrc=uid;
+  document.getElementById('mw').style.cursor='crosshair';
+  document.getElementById('th').style.display='block';
+  units.forEach(updateUnitMarker);
+}
+function cancelTargeting(){
+  tgtSrc=null;
+  document.getElementById('mw').style.cursor='';
+  document.getElementById('th').style.display='none';
+  units.forEach(updateUnitMarker);
+}
+function confirmTarget(lat,lon,dstId){
+  const sid=tgtSrc; cancelTargeting();
+  const dst=dstId?units.find(u=>u.id===dstId):null;
+  const dlat=dst?dst.lat:lat, dlon=dst?dst.lon:lon;
+  engs=engs.filter(e=>e.srcId!==sid);
+  engs.push({srcId:sid,dstId,dstLat:dlat,dstLon:dlon,state:{},t:0});
+  updateAllMarkers();
+  selectUnit(sid);
+  renderOOB(); renderUnitList();
+}
+function removeEng(sid){
+  engs=engs.filter(e=>e.srcId!==sid);
+  updateAllMarkers(); renderUnitList();
+  document.getElementById('engpanel').style.display='none';
+  const u=units.find(u=>u.id===sid); if(u) renderProfile(u);
+}
+function stopSims(){
+  engs=[]; updateAllMarkers(); renderUnitList();
+  document.getElementById('engpanel').style.display='none';
+  document.getElementById('shud').style.display='none';
+  document.getElementById('esb').style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════
+// ANIMATION LOOP — canvas overlay
+// ═══════════════════════════════════════════════════════
+function animLoop(){
+  const oc=document.getElementById('oc');
+  const ctx=oc.getContext('2d');
+  ctx.clearRect(0,0,oc.width,oc.height);
+
+  engs.forEach(eg=>{
+    const src=units.find(u=>u.id===eg.srcId); if(!src) return;
+    const [sx,sy]=geoToCanvas(src.lat,src.lon);
+    const [dx,dy]=geoToCanvas(eg.dstLat,eg.dstLon);
     const cc=COUNTRIES[src.country].color;
-    const type=getSimType(src.id);
+    const dist=Math.hypot(dx-sx,dy-sy);
 
-    // Draw engagement line
+    // Engagement line
     ctx.save();
-    ctx.strokeStyle=cc+'30'; ctx.lineWidth=1; ctx.setLineDash([4,8]);
-    ctx.beginPath(); ctx.moveTo(sp.x,sp.y); ctx.lineTo(dp.x,dp.y); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
+    ctx.strokeStyle=cc+'28'; ctx.lineWidth=1; ctx.setLineDash([4,9]);
+    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(dx,dy); ctx.stroke();
+    ctx.setLineDash([]); ctx.restore();
 
-    // Target marker (if no unit target)
-    if(!eng.dstId) {
-      ctx.strokeStyle=TC.CRITICAL+'88'; ctx.lineWidth=1.5;
-      ctx.beginPath(); ctx.arc(dp.x,dp.y,8,0,Math.PI*2); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(dp.x-12,dp.y); ctx.lineTo(dp.x+12,dp.y); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(dp.x,dp.y-12); ctx.lineTo(dp.x,dp.y+12); ctx.stroke();
+    // Target reticle (no unit target)
+    if(!eg.dstId){
+      ctx.strokeStyle=TC.CRITICAL+'77'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.arc(dx,dy,9,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(dx-14,dy); ctx.lineTo(dx+14,dy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(dx,dy-14); ctx.lineTo(dx,dy+14); ctx.stroke();
     }
 
-    // Run sim
-    drawEngagementSim(type,ctx,eng.state,eng.t,sp.x,sp.y,dp.x,dp.y,cc);
-    eng.t++;
-
-    // Reset loop when done
-    if(eng.state._done && type!=='radar') {
-      eng.t=0; eng.state={P:[]};
-    }
+    const done=runSim(simType(src.id),ctx,eg.state,eg.t,sx,sy,dx,dy,cc,dist);
+    eg.t++;
+    if(done){ eg.t=0; eg.state={}; }
   });
 
-  // Sim HUD
-  if(engagements.length>0) {
-    const src=units.find(u=>u.id===engagements[0].srcId);
-    if(src) {
-      const hud=document.getElementById('sim-hud');
-      hud.style.display='block';
-      document.getElementById('endsim-btn').style.display='block';
-      hud.textContent=`● ENGAGEMENT ACTIVE  ·  ${src.name.toUpperCase()}  ·  ${getSimType(src.id).toUpperCase()}  ·  T+${(engagements[0].t/60).toFixed(1)}s`;
+  // HUD
+  if(engs.length>0){
+    const e=engs[0]; const src=units.find(u=>u.id===e.srcId);
+    if(src){
+      document.getElementById('shud').style.display='block';
+      document.getElementById('esb').style.display='block';
+      document.getElementById('shud').textContent=
+        `● ${src.name.toUpperCase()}  ·  ${simType(src.id).toUpperCase().replace('_',' ')}  ·  T+${(e.t/60).toFixed(1)}s`;
     }
+  } else {
+    document.getElementById('shud').style.display='none';
+    document.getElementById('esb').style.display='none';
   }
 
   requestAnimationFrame(animLoop);
 }
 
-// Re-draw static engagement lines when map moves (no animation)
-function redrawEngagements() {
-  if(engagements.length>0) return; // animLoop handles it
-  const canvas=document.getElementById('overlay');
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+function renderAll(){
+  const mc=document.getElementById('mc');
+  drawMap(mc.getContext('2d'));
+  updateAllMarkers();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// SIMULATION DRAWING — source→dest vectors
-// ═══════════════════════════════════════════════════════════════
-function drawEngagementSim(type,ctx,st,t,sx,sy,dx,dy,color) {
+// ═══════════════════════════════════════════════════════
+// SIMULATIONS
+// ═══════════════════════════════════════════════════════
+class Pt{
+  constructor(x,y,vx,vy,life,c,r=2){Object.assign(this,{x,y,vx,vy,life,ml:life,c,r});}
+  tick(){this.x+=this.vx;this.y+=this.vy;this.vy+=.04;this.vx*=.97;this.vy*=.97;this.life--;}
+  draw(ctx){ctx.globalAlpha=(this.life/this.ml)*.85;ctx.fillStyle=this.c;ctx.beginPath();ctx.arc(this.x,this.y,Math.max(.1,this.r*(this.life/this.ml)),0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
+  get dead(){return this.life<=0;}
+}
+function burst(P,x,y,c1,c2,n=30){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=Math.random()*5+.5;P.push(new Pt(x,y,Math.cos(a)*s,Math.sin(a)*s,~~(Math.random()*30+12),Math.random()>.5?c1:c2,Math.random()*2.5+.5));}}
+function smk(P,x,y,c='rgba(160,160,160,.28)'){P.push(new Pt(x+(Math.random()-.5)*3,y+(Math.random()-.5)*3,(Math.random()-.5)*.4,-Math.random()*.25,~~(Math.random()*22+10),c,Math.random()*3+1.5));}
+
+function runSim(type,ctx,st,t,sx,sy,dx,dy,color,dist){
   if(!st.P) st.P=[];
-  const P=st.P;
-  const dist=Math.hypot(dx-sx,dy-sy);
-  const ang=Math.atan2(dy-sy,dx-sx);
+  const P=st.P, spd=Math.max(70,Math.min(dist,200));
+  let done=false;
 
-  if(type==='ballistic'||type==='antiship') {
-    const dur=Math.max(120,Math.min(280,dist*.4));
-    const prog=Math.min(t/dur,1);
-    const mx=sx+(dx-sx)*prog;
-    const arc=-(type==='ballistic'?1:0.35)*Math.sin(prog*Math.PI)*Math.min(dist*.5,140);
-    const my=sy+(dy-sy)*prog+arc;
-    if(t%2===0&&prog<.94){ smk(P,mx,my,'rgba(255,120,30,.55)'); }
+  if(type==='ballistic'){
+    const dur=spd*1.1, prog=Math.min(t/dur,1);
+    const mx=sx+(dx-sx)*prog, arcH=Math.min(dist*.55,150);
+    const my=sy+(dy-sy)*prog-Math.sin(prog*Math.PI)*arcH;
+    if(t%2===0&&prog<.95) smk(P,mx,my,'rgba(255,130,30,.45)');
     P.forEach(p=>{p.tick();p.draw(ctx);}); st.P=P.filter(p=>!p.dead);
-    if(prog>.94&&!st.ex){ st.ex=true; burst(P,dx,dy,'#ff5500','#ffcc00',45); burst(P,dx,dy,'#fff','#ff9900',18); }
-    // Arc line
-    ctx.setLineDash([4,7]); ctx.strokeStyle=color+'28'; ctx.lineWidth=1;
-    ctx.beginPath();
-    for(let p=0;p<=1;p+=.02){
-      const px=sx+(dx-sx)*p, py=sy+(dy-sy)*p-Math.sin(p*Math.PI)*Math.min(dist*.5,140);
-      p===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
-    }
-    ctx.stroke(); ctx.setLineDash([]);
-    if(prog<.93){
-      const pp=Math.max(0,prog-.012);
-      const pmx=sx+(dx-sx)*pp, pmy=sy+(dy-sy)*pp-Math.sin(pp*Math.PI)*Math.min(dist*.5,140);
+    if(prog>.95&&!st.ex){st.ex=true;burst(P,dx,dy,'#ff6600','#ffcc00',38);burst(P,dx,dy,'#fff','#ff9900',14);}
+    ctx.save(); ctx.setLineDash([4,8]); ctx.strokeStyle=color+'28'; ctx.lineWidth=1;
+    ctx.beginPath(); for(let p=0;p<=1;p+=.02) ctx.lineTo(sx+(dx-sx)*p,sy+(dy-sy)*p-Math.sin(p*Math.PI)*arcH); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+    if(prog<.94){
+      const pp=Math.max(0,prog-.015), pmx=sx+(dx-sx)*pp, pmy=sy+(dy-sy)*pp-Math.sin(pp*Math.PI)*arcH;
+      const g=ctx.createRadialGradient(mx,my,0,mx,my,11); g.addColorStop(0,'rgba(255,150,40,.85)'); g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(mx,my,11,0,Math.PI*2); ctx.fill();
       ctx.save(); ctx.translate(mx,my); ctx.rotate(Math.atan2(my-pmy,mx-pmx));
-      const g=ctx.createRadialGradient(-8,0,0,-8,0,12); g.addColorStop(0,'rgba(255,140,0,.8)'); g.addColorStop(1,'transparent');
-      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(-8,0,12,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(8,0); ctx.lineTo(-6,-3); ctx.lineTo(-6,3); ctx.closePath(); ctx.fill();
-      ctx.restore();
+      ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(8,0); ctx.lineTo(-6,-2.8); ctx.lineTo(-6,2.8); ctx.closePath(); ctx.fill(); ctx.restore();
     }
-    _label(ctx,sx,sy,type==='ballistic'?
-      `BALLISTIC  ·  ${Math.round(Math.max(0,Math.sin(prog*Math.PI))*85)}km ALT  ·  ${Math.round(prog*100)}%`:
-      `SEA-SKIMMER  ·  ${Math.max(4,Math.round(18-prog*15))}m ALT  ·  ${Math.round(prog*100)}%`,color);
-    if(prog>=1&&P.length===0) st._done=true;
+    lbl(ctx,sx,sy,`BALLISTIC  ALT ${Math.round(Math.max(0,Math.sin(prog*Math.PI))*90)}km  ${Math.round(prog*100)}%`,color);
+    if(prog>=1&&P.length===0) done=true;
   }
-
-  else if(type==='cruise') {
-    if(!st.path){
-      st.path=[];
-      for(let i=0;i<=80;i++){
-        const p=i/80;
-        st.path.push([sx+(dx-sx)*p, sy+(dy-sy)*p+Math.sin(i*.16)*18+Math.sin(i*.31)*7]);
-      }
-    }
-    const dur=Math.max(100,Math.min(220,dist*.35));
-    const prog=Math.min(t/dur,1);
-    const idx=Math.floor(prog*(st.path.length-1));
+  else if(type==='cruise'){
+    if(!st.path){st.path=[];for(let i=0;i<=80;i++){const p=i/80;st.path.push([sx+(dx-sx)*p,sy+(dy-sy)*p+Math.sin(i*.19)*15+Math.sin(i*.34)*6]);}}
+    const dur=spd, prog=Math.min(t/dur,1), idx=~~(prog*(st.path.length-1));
     const[mx,my]=st.path[Math.min(idx,st.path.length-1)];
-    if(t%2===0&&prog<.96){ smk(P,mx,my,'rgba(170,170,170,.3)'); }
+    if(t%2===0&&prog<.97) smk(P,mx,my,'rgba(150,150,150,.25)');
     P.forEach(p=>{p.tick();p.draw(ctx);}); st.P=P.filter(p=>!p.dead);
-    if(prog>.95&&!st.ex){ st.ex=true; burst(P,dx,dy,'#ff5500','#ffcc00',55); }
-    ctx.setLineDash([3,6]); ctx.strokeStyle=color+'22'; ctx.lineWidth=1;
-    ctx.beginPath(); st.path.forEach(([px,py],i)=>i===0?ctx.moveTo(px,py):ctx.lineTo(px,py)); ctx.stroke(); ctx.setLineDash([]);
+    if(prog>.96&&!st.ex){st.ex=true;burst(P,dx,dy,'#ff5500','#ffcc00',45);}
+    ctx.save(); ctx.setLineDash([3,7]); ctx.strokeStyle=color+'20'; ctx.lineWidth=1; ctx.beginPath(); st.path.forEach(([px,py],i)=>i===0?ctx.moveTo(px,py):ctx.lineTo(px,py)); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
     if(prog<.95){
-      const next=st.path[Math.min(idx+1,st.path.length-1)];
-      ctx.save(); ctx.translate(mx,my); ctx.rotate(Math.atan2(next[1]-my,next[0]-mx));
-      const g=ctx.createRadialGradient(-7,0,0,-7,0,10); g.addColorStop(0,'rgba(255,130,0,.7)'); g.addColorStop(1,'transparent');
-      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(-7,0,10,0,Math.PI*2); ctx.fill();
+      const nxt=st.path[Math.min(idx+1,st.path.length-1)];
+      const g=ctx.createRadialGradient(mx,my,0,mx,my,10); g.addColorStop(0,'rgba(255,135,40,.75)'); g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(mx,my,10,0,Math.PI*2); ctx.fill();
+      ctx.save(); ctx.translate(mx,my); ctx.rotate(Math.atan2(nxt[1]-my,nxt[0]-mx));
       ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(8,0); ctx.lineTo(-5,-2.5); ctx.lineTo(-5,2.5); ctx.closePath(); ctx.fill();
-      ctx.fillStyle=color+'bb';
-      ctx.beginPath(); ctx.moveTo(1,0); ctx.lineTo(-3,-7); ctx.lineTo(-5,0); ctx.closePath(); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(1,0); ctx.lineTo(-3,7);  ctx.lineTo(-5,0); ctx.closePath(); ctx.fill();
-      ctx.restore();
+      ctx.fillStyle=color+'cc'; ctx.beginPath(); ctx.moveTo(1,0); ctx.lineTo(-4,-8); ctx.lineTo(-6,0); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(1,0); ctx.lineTo(-4,8); ctx.lineTo(-6,0); ctx.closePath(); ctx.fill(); ctx.restore();
     }
-    _label(ctx,sx,sy,`CRUISE  ·  NOE ${Math.round(40+Math.sin(t*.1)*12)}m  ·  ${Math.round(prog*100)}%`,color);
-    if(prog>=1&&P.length===0) st._done=true;
+    lbl(ctx,sx,sy,`NOE CRUISE  ${Math.round(40+Math.sin(t*.1)*12)}m  ${Math.round(prog*100)}%`,color);
+    if(prog>=1&&P.length===0) done=true;
   }
-
-  else if(type==='sam') {
-    const dur=Math.max(80,Math.min(160,dist*.6));
-    const prog=Math.min(t/dur,1);
-    // Threat comes from target toward source
-    const tx=dx+(sx-dx)*Math.min(prog*1.8,1), ty=dy+(sy-dy)*Math.min(prog*1.8,1);
-    const samP=Math.max(0,Math.min(1,(t-30)/60));
-    const ix=dx+(sx-dx)*.52, iy=dy+(sy-dy)*.52;
-    const smx=sx+(ix-sx)*samP, smy=sy+(iy-sy)*samP;
-    if(t%3===0&&prog<.85) smk(P,tx,ty,'rgba(200,40,40,.4)');
-    if(t>30&&samP<.96) smk(P,smx,smy,'rgba(60,180,255,.45)');
-    P.forEach(p=>{p.tick();p.draw(ctx);}); st.P=P.filter(p=>!p.dead);
-    const hit=samP>.95; if(hit&&!st.ex){ st.ex=true; burst(P,ix,iy,'#fff','#ffd700',55); }
-    // Radar sweep at source
+  else if(type==='sam'){
+    const dur=spd*.9, p=t/dur, tx=dx+(sx-dx)*Math.min(p*2,1), ty=dy+(sy-dy)*Math.min(p*2,1);
+    const sp2=Math.max(0,Math.min(1,(t-25)/55)), ix=dx+(sx-dx)*.5, iy=dy+(sy-dy)*.5;
+    const imx=sx+(ix-sx)*sp2, imy=sy+(iy-sy)*sp2;
+    if(t%3===0&&p<.9) smk(P,tx,ty,'rgba(200,40,40,.35)');
+    if(t>25&&sp2<.97) smk(P,imx,imy,'rgba(55,175,255,.4)');
+    P.forEach(p2=>{p2.tick();p2.draw(ctx);}); st.P=P.filter(p2=>!p2.dead);
+    const hit=sp2>.96; if(hit&&!st.ex){st.ex=true;burst(P,ix,iy,'#fff','#ffd700',45);}
     const sw=(t*2.8)%360*Math.PI/180;
     ctx.save(); ctx.translate(sx,sy);
-    for(let i=0;i<18;i++){ const a=sw-i*.06; ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,70,a-.06,a); ctx.closePath(); ctx.fillStyle=color+Math.floor((18-i)*6).toString(16).padStart(2,'0'); ctx.fill(); }
-    [35,70].forEach(r=>{ ctx.strokeStyle=color+'16'; ctx.lineWidth=.6; ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke(); });
+    for(let i=0;i<16;i++){const a=sw-i*.06;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,62,a-.06,a);ctx.closePath();ctx.fillStyle=color+~~((16-i)*6).toString(16).padStart(2,'0');ctx.fill();}
+    [30,62].forEach(r=>{ctx.strokeStyle=color+'16';ctx.lineWidth=.6;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();});
     ctx.restore();
-    if(!hit){ ctx.fillStyle='#ff3030'; ctx.shadowBlur=6; ctx.shadowColor='#ff3030'; ctx.beginPath(); ctx.arc(tx,ty,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; }
-    if(t>30&&samP<.95){ ctx.fillStyle=color; ctx.shadowBlur=7; ctx.shadowColor=color; ctx.beginPath(); ctx.arc(smx,smy,3.5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; }
-    _label(ctx,sx,sy,st.ex?'✓ INTERCEPT':'TRACKING — INTERCEPTOR AWAY',color);
-    if(hit&&P.length===0) st._done=true;
+    if(!hit){ctx.fillStyle=TC.CRITICAL;ctx.shadowBlur=6;ctx.shadowColor=TC.CRITICAL;ctx.beginPath();ctx.arc(tx,ty,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+    if(t>25&&sp2<.95){ctx.fillStyle=color;ctx.shadowBlur=7;ctx.shadowColor=color;ctx.beginPath();ctx.arc(imx,imy,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+    lbl(ctx,sx,sy,st.ex?'✓ INTERCEPT':'TRACKING INBOUND',color);
+    if(hit&&P.length===0) done=true;
   }
-
-  else if(type==='radar') {
-    const sw=(t*1.9)%360*Math.PI/180;
-    if(!st.blips) st.blips=[{a:.4,d:.58},{a:2.0,d:.43},{a:3.3,d:.68},{a:4.9,d:.5},{a:5.6,d:.37}].map(b=>({...b,age:0}));
-    const R=Math.min(dist,140);
+  else if(type==='radar'){
+    const sw=(t*1.8)%360*Math.PI/180;
+    if(!st.blips) st.blips=[{a:.4,d:.58},{a:2.0,d:.43},{a:3.3,d:.7},{a:5.0,d:.5},{a:5.7,d:.37}].map(b=>({...b,age:0}));
+    const R=Math.min(dist*.95,145);
     ctx.save(); ctx.translate(sx,sy);
-    [R*.33,R*.66,R].forEach(r=>{ ctx.strokeStyle=color+'18'; ctx.lineWidth=.6; ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke(); });
-    for(let i=0;i<22;i++){ const a=sw-i*.054; ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,R,a-.054,a); ctx.closePath(); ctx.fillStyle=color+Math.floor((22-i)*4).toString(16).padStart(2,'0'); ctx.fill(); }
-    ctx.strokeStyle=color+'cc'; ctx.lineWidth=1.5; ctx.shadowBlur=6; ctx.shadowColor=color;
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(sw)*R,Math.sin(sw)*R); ctx.stroke(); ctx.shadowBlur=0;
-    st.blips.forEach(b=>{ const diff=((sw-b.a)*180/Math.PI+360)%360; if(diff<8) b.age=55;
-      if(b.age>0){ b.age--; const al=b.age/55, bx=Math.cos(b.a)*R*b.d, by=Math.sin(b.a)*R*b.d;
-        ctx.globalAlpha=al; ctx.fillStyle='#ff3030'; ctx.shadowBlur=8; ctx.shadowColor='#ff3030';
-        ctx.beginPath(); ctx.arc(bx,by,5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; ctx.globalAlpha=1; }});
+    [R/3,R*2/3,R].forEach(r=>{ctx.strokeStyle=color+'14';ctx.lineWidth=.6;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();});
+    for(let i=0;i<22;i++){const a=sw-i*.055;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,a-.055,a);ctx.closePath();ctx.fillStyle=color+~~((22-i)*4).toString(16).padStart(2,'0');ctx.fill();}
+    ctx.strokeStyle=color+'cc';ctx.lineWidth=1.5;ctx.shadowBlur=5;ctx.shadowColor=color;
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(sw)*R,Math.sin(sw)*R);ctx.stroke();ctx.shadowBlur=0;
+    st.blips.forEach(b=>{const d2=((sw-b.a)*180/Math.PI+360)%360;if(d2<8)b.age=55;if(b.age>0){b.age--;const al=b.age/55,bx=Math.cos(b.a)*R*b.d,by=Math.sin(b.a)*R*b.d;ctx.globalAlpha=al;ctx.fillStyle=TC.CRITICAL;ctx.shadowBlur=8;ctx.shadowColor=TC.CRITICAL;ctx.beginPath();ctx.arc(bx,by,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.globalAlpha=1;}});
     ctx.restore();
-    const ac=st.blips.filter(b=>b.age>0).length;
-    _label(ctx,sx,sy,`CONTACTS ${ac}  ·  ${Math.round((sw*180/Math.PI+360)%360)}° SWEEP`,color);
+    lbl(ctx,sx,sy,`CONTACTS ${st.blips.filter(b=>b.age>0).length}  ${~~((sw*180/Math.PI+360)%360)}° SWEEP`,color);
   }
-
-  else if(type==='dogfight') {
-    const fx=sx+Math.sin(t*.042)*(dist*.3)+Math.cos(t*.026)*(dist*.12);
-    const fy=sy+Math.cos(t*.051)*(dist*.25)+Math.sin(t*.033)*(dist*.1);
-    const ex=dx-Math.sin(t*.038)*(dist*.22)+Math.cos(t*.029)*(dist*.1);
-    const ey=dy-Math.cos(t*.047)*(dist*.2)+Math.sin(t*.034)*(dist*.08);
-    if(t%3===0){ smk(P,fx,fy,'rgba(255,255,255,.08)'); if(!st.kill) smk(P,ex,ey,'rgba(255,50,50,.08)'); }
-    if(!st.fired&&t>80){ st.fired=true; }
+  else if(type==='dogfight'){
+    const r=dist*.35;
+    const fx=sx+Math.sin(t*.042)*r+Math.cos(t*.026)*(r*.42);
+    const fy=sy+Math.cos(t*.051)*(r*.82)+Math.sin(t*.033)*(r*.3);
+    const ex=dx-Math.sin(t*.038)*(r*.8)+Math.cos(t*.029)*(r*.36);
+    const ey=dy-Math.cos(t*.047)*(r*.72)+Math.sin(t*.034)*(r*.26);
+    if(t%3===0){smk(P,fx,fy,'rgba(255,255,255,.07)');if(!st.kill)smk(P,ex,ey,'rgba(200,40,40,.07)');}
+    if(!st.fired&&t>80)st.fired=true;
     if(st.fired&&!st.kill){
-      const mp=Math.min(1,(t-80)/55);
-      if(st.mx===undefined){st.mx=fx;st.my=fy;}
-      st.mx=fx+(ex-fx)*mp; st.my=fy+(ey-fy)*mp;
-      smk(P,st.mx,st.my,'rgba(0,190,255,.4)');
-      if(mp>.94){ st.kill=true; burst(P,st.mx,st.my,'#ff5500','#ffcc00',60); }
-      if(!st.kill){ ctx.fillStyle='#00ccff'; ctx.shadowBlur=5; ctx.shadowColor='#00ccff'; ctx.beginPath(); ctx.arc(st.mx,st.my,3.5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; }
+      const mp=Math.min(1,(t-80)/55); st.mx=fx+(ex-fx)*mp; st.my=fy+(ey-fy)*mp;
+      smk(P,st.mx,st.my,'rgba(0,180,255,.35)');
+      if(mp>.94){st.kill=true;burst(P,st.mx,st.my,'#ff5500','#ffcc00',55);}
+      if(!st.kill){ctx.fillStyle='#00ccff';ctx.shadowBlur=5;ctx.shadowColor='#00ccff';ctx.beginPath();ctx.arc(st.mx,st.my,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
     }
     P.forEach(p=>{p.tick();p.draw(ctx);}); st.P=P.filter(p=>!p.dead);
-    const dp2=(px,py,pc,lbl)=>{ if(px==null) return;
-      ctx.save(); ctx.translate(px,py); ctx.rotate(Math.atan2(py-sy,px-sx));
-      ctx.shadowBlur=4; ctx.shadowColor=pc; ctx.fillStyle=pc;
-      ctx.beginPath(); ctx.moveTo(10,0); ctx.lineTo(-7,-2.5); ctx.lineTo(-9,0); ctx.lineTo(-7,2.5); ctx.closePath(); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(2,0); ctx.lineTo(-4,-10); ctx.lineTo(-7,0); ctx.closePath(); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(2,0); ctx.lineTo(-4,10);  ctx.lineTo(-7,0); ctx.closePath(); ctx.fill();
-      ctx.shadowBlur=0; ctx.restore();
-      ctx.fillStyle=pc+'88'; ctx.font="7px 'Share Tech Mono',monospace"; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText(lbl,px,py-13);
-    };
-    dp2(fx,fy,color,'FRIENDLY');
-    dp2(!st.kill?ex:null,!st.kill?ey:null,'#cc2828','HOSTILE');
-    _label(ctx,sx,sy,st.kill?'✓ FOX-3 SPLASH':t>80?'FOX-3 AWAY — BVR':'RADAR LOCK',color);
-    if(st.kill&&P.length===0) st._done=true;
+    [[fx,fy,color,'FRIENDLY'],[!st.kill?ex:null,!st.kill?ey:null,TC.CRITICAL,'HOSTILE']].forEach(([px,py,pc,nm])=>{
+      if(px==null)return;
+      ctx.save();ctx.translate(px,py);ctx.rotate(Math.atan2(py-sy,px-sx));
+      ctx.shadowBlur=4;ctx.shadowColor=pc;ctx.fillStyle=pc;
+      ctx.beginPath();ctx.moveTo(11,0);ctx.lineTo(-8,-2.5);ctx.lineTo(-9,0);ctx.lineTo(-8,2.5);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(2,0);ctx.lineTo(-4,-11);ctx.lineTo(-7,0);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(2,0);ctx.lineTo(-4,11);ctx.lineTo(-7,0);ctx.closePath();ctx.fill();
+      ctx.shadowBlur=0;ctx.restore();
+      ctx.fillStyle=pc+'99';ctx.font="7px 'Share Tech Mono',monospace";ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(nm,px,py-13);
+    });
+    lbl(ctx,sx,sy,st.kill?'✓ FOX-3 SPLASH':t>80?'FOX-3 AWAY':'RADAR LOCK',color);
+    if(st.kill&&P.length===0) done=true;
   }
-
-  else if(type==='stealth') {
-    const n=6;
-    if(!st.wpts){ st.wpts=[]; for(let i=0;i<n;i++){ const p=i/(n-1); st.wpts.push([sx+(dx-sx)*p+(Math.random()-.5)*20, sy+(dy-sy)*p+(Math.random()-.5)*15]); } }
-    // Enemy radars
-    if(!st.radars){ st.radars=[{ox:sx+(dx-sx)*.4+(Math.random()-.3)*40,oy:sy+(dy-sy)*.4+(Math.random()-.3)*30,sw:0,sp:1.3}]; }
-    st.radars.forEach(r=>{ r.sw=(r.sw+r.sp)%360; const a=r.sw*Math.PI/180;
-      ctx.save(); ctx.translate(r.ox,r.oy);
-      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,65,a-.35,a); ctx.closePath(); ctx.fillStyle='rgba(220,30,30,.07)'; ctx.fill();
-      [30,65].forEach(rr=>{ ctx.strokeStyle='rgba(220,30,30,.1)'; ctx.lineWidth=.5; ctx.beginPath(); ctx.arc(0,0,rr,0,Math.PI*2); ctx.stroke(); });
-      ctx.restore(); ctx.fillStyle='rgba(180,40,40,.6)'; ctx.fillRect(r.ox-2,r.oy-7,4,7); });
-    const dur=Math.max(120,Math.min(240,dist*.38));
-    const prog=Math.min(t/dur,1);
-    const si=Math.min(st.wpts.length-2,Math.floor(prog*(st.wpts.length-1)));
+  else if(type==='stealth'){
+    if(!st.wpts){st.wpts=[[sx,sy]];for(let i=1;i<=5;i++){const p=i/5;st.wpts.push([sx+(dx-sx)*p+(Math.random()-.5)*22,sy+(dy-sy)*p+(Math.random()-.5)*16]);}}
+    if(!st.rads){const mx2=(sx+dx)/2,my2=(sy+dy)/2;st.rads=[{ox:mx2+(Math.random()-.3)*40,oy:my2+(Math.random()-.3)*30,sw:0,sp:1.3}];}
+    st.rads.forEach(r=>{r.sw=(r.sw+r.sp)%360;const a=r.sw*Math.PI/180;ctx.save();ctx.translate(r.ox,r.oy);ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,58,a-.35,a);ctx.closePath();ctx.fillStyle='rgba(200,30,30,.06)';ctx.fill();[28,58].forEach(rr=>{ctx.strokeStyle='rgba(200,30,30,.08)';ctx.lineWidth=.5;ctx.beginPath();ctx.arc(0,0,rr,0,Math.PI*2);ctx.stroke();});ctx.restore();ctx.fillStyle='rgba(180,40,40,.55)';ctx.fillRect(r.ox-2,r.oy-7,4,7);});
+    const dur=spd*1.15,prog=Math.min(t/dur,1),si=Math.min(st.wpts.length-2,~~(prog*(st.wpts.length-1)));
     const sp2=(prog*(st.wpts.length-1))-si;
-    const[fx2,fy2]=st.wpts[si], to=st.wpts[Math.min(si+1,st.wpts.length-1)];
-    const mx=fx2+(to[0]-fx2)*sp2, my=fy2+(to[1]-fy2)*sp2;
-    if(t%5===0&&prog<.92) P.push(new Ptcl(mx,my,0,0,7,color+'20',1.2));
+    const[fx,fy]=st.wpts[si],to=st.wpts[Math.min(si+1,st.wpts.length-1)];
+    const mx2=fx+(to[0]-fx)*sp2,my2=fy+(to[1]-fy)*sp2;
+    if(t%5===0&&prog<.92)P.push(new Pt(mx2,my2,0,0,7,color+'1e',1.2));
     P.forEach(p=>{p.tick();p.draw(ctx);}); st.P=P.filter(p=>!p.dead);
-    if(prog>.88&&!st.ex){ st.ex=true; burst(P,dx,dy,'#ff5500','#ffcc00',75); }
-    ctx.setLineDash([2,8]); ctx.strokeStyle=color+'14'; ctx.lineWidth=1;
-    ctx.beginPath(); st.wpts.forEach(([wx,wy],i)=>i===0?ctx.moveTo(wx,wy):ctx.lineTo(wx,wy)); ctx.stroke(); ctx.setLineDash([]);
-    if(prog<.92){ ctx.save(); ctx.translate(mx,my); ctx.rotate(Math.atan2(to[1]-fy2,to[0]-fx2));
-      ctx.shadowBlur=2; ctx.shadowColor=color; ctx.fillStyle=color+'ee';
-      ctx.beginPath(); ctx.moveTo(11,0); ctx.lineTo(-7,-12); ctx.lineTo(-9,0); ctx.lineTo(-7,12); ctx.closePath(); ctx.fill();
-      ctx.shadowBlur=0; ctx.restore(); }
-    _label(ctx,sx,sy,`RCS <0.001m²  ·  ${st.ex?'✓ TARGET DESTROYED':'PENETRATING'}`,color);
-    if(st.ex&&P.length===0) st._done=true;
+    if(prog>.88&&!st.ex){st.ex=true;burst(P,dx,dy,'#ff5500','#ffcc00',65);}
+    ctx.save();ctx.setLineDash([2,9]);ctx.strokeStyle=color+'14';ctx.lineWidth=1;ctx.beginPath();st.wpts.forEach(([wx,wy],i)=>i===0?ctx.moveTo(wx,wy):ctx.lineTo(wx,wy));ctx.stroke();ctx.setLineDash([]);ctx.restore();
+    if(prog<.92){ctx.save();ctx.translate(mx2,my2);ctx.rotate(Math.atan2(to[1]-fy,to[0]-fx));ctx.shadowBlur=2;ctx.shadowColor=color;ctx.fillStyle=color+'ee';ctx.beginPath();ctx.moveTo(12,0);ctx.lineTo(-9,-14);ctx.lineTo(-11,0);ctx.lineTo(-9,14);ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.restore();}
+    lbl(ctx,sx,sy,`RCS <0.001m²  ${st.ex?'✓ TARGET DESTROYED':'UNDETECTED'}`,color);
+    if(st.ex&&P.length===0) done=true;
   }
-
-  else if(type==='naval') {
-    const dur=Math.max(120,Math.min(250,dist*.4));
-    const prog=Math.min(t/dur,1);
+  else if(type==='naval'){
     if(!st.salvo) st.salvo=[];
-    [50,65,80].forEach((lt,i)=>{ if(t===lt) st.salvo.push({lt,i,hit:false}); });
-    st.salvo.forEach(m=>{ const mp=Math.min(1,(t-m.lt)/90);
-      m.cx=sx+(dx-sx)*mp; m.cy=sy+(dy-sy)*mp-Math.sin(mp*Math.PI)*45;
-      if(mp>.96&&!m.hit){ m.hit=true; burst(P,dx,dy,'#ff5500','#ffcc00',50); if(m.i===2) st.kill=true; }
-      if(!m.hit){ smk(P,m.cx,m.cy,'rgba(160,160,160,.28)'); ctx.fillStyle=color; ctx.shadowBlur=4; ctx.shadowColor=color; ctx.beginPath(); ctx.arc(m.cx,m.cy,3.5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; }
-    });
+    [45,60,75].forEach((lt,i)=>{if(t===lt)st.salvo.push({lt,i,hit:false});});
+    st.salvo.forEach(m=>{const mp=Math.min(1,(t-m.lt)/85);m.cx=sx+(dx-sx)*mp;m.cy=sy+(dy-sy)*mp-Math.sin(mp*Math.PI)*40;if(mp>.96&&!m.hit){m.hit=true;burst(P,dx,dy,'#ff5500','#ffcc00',42);if(m.i===2)st.kill=true;}if(!m.hit){smk(P,m.cx,m.cy,'rgba(140,140,140,.22)');ctx.fillStyle=color;ctx.shadowBlur=4;ctx.shadowColor=color;ctx.beginPath();ctx.arc(m.cx,m.cy,3.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}});
     P.forEach(p=>{p.tick();p.draw(ctx);}); st.P=P.filter(p=>!p.dead);
-    _label(ctx,sx,sy,`NAVAL SALVO ${st.salvo.filter(m=>m.hit).length}/3  ·  ${st.kill?'✓ TARGET HIT':'TRACKING'}`,color);
-    if(st.kill&&P.length===0) st._done=true;
+    lbl(ctx,sx,sy,`NAVAL SALVO ${st.salvo.filter(m=>m.hit).length}/3  ${st.kill?'✓ HIT':'IN FLIGHT'}`,color);
+    if(st.kill&&P.length===0) done=true;
   }
-
-  else if(type==='helicopter') {
+  else if(type==='helicopter'){
     const ra=t*.27;
-    ctx.save(); ctx.translate(sx,sy-14); ctx.strokeStyle=color+'cc'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(Math.cos(ra)*24,Math.sin(ra)*8); ctx.lineTo(Math.cos(ra+Math.PI)*24,Math.sin(ra+Math.PI)*8); ctx.stroke(); ctx.restore();
-    ctx.fillStyle=color; ctx.beginPath(); ctx.ellipse(sx,sy,16,8,0,0,Math.PI*2); ctx.fill();
-    ctx.fillRect(sx+14,sy-2,14,4); ctx.fillStyle=color+'77'; ctx.beginPath(); ctx.arc(sx-5,sy-5,5,0,Math.PI*2); ctx.fill();
-    if(t%2===0) P.push(new Ptcl(sx+(Math.random()-.5)*28,sy+9,(Math.random()-.5)*2,.7,14,'rgba(120,100,70,.33)',2));
-    // Fires toward target
-    if(!st.tgts){ st.tgts=[{x:dx,y:dy,alive:true},{x:dx+(Math.random()-.5)*40,y:dy+(Math.random()-.5)*30,alive:true},{x:dx+(Math.random()-.5)*40,y:dy+(Math.random()-.5)*30,alive:true}]; }
-    [55,105,155].forEach((ft,i)=>{ if(t===ft) st['m'+i]={x:sx,y:sy,hit:false};
-      const m=st['m'+i]; if(!m) return;
-      if(!m.hit){ const mp=Math.min(1,(t-ft)/42); m.x=sx+(st.tgts[i].x-sx)*mp; m.y=sy+(st.tgts[i].y-sy)*mp;
-        smk(P,m.x,m.y,'rgba(255,120,0,.4)');
-        if(mp>.93&&st.tgts[i].alive){ m.hit=true; st.tgts[i].alive=false; burst(P,st.tgts[i].x,st.tgts[i].y,'#ff5500','#ffcc00',45); }
-        if(!m.hit){ ctx.fillStyle=color; ctx.beginPath(); ctx.arc(m.x,m.y,3,0,Math.PI*2); ctx.fill(); }}
-    });
-    st.tgts.forEach(tg=>{ if(tg.alive){ ctx.strokeStyle='rgba(200,40,40,.7)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(tg.x,tg.y,7,0,Math.PI*2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(tg.x-10,tg.y); ctx.lineTo(tg.x+10,tg.y); ctx.moveTo(tg.x,tg.y-10); ctx.lineTo(tg.x,tg.y+10); ctx.stroke(); }});
+    ctx.save();ctx.translate(sx,sy-14);ctx.strokeStyle=color+'cc';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(Math.cos(ra)*24,Math.sin(ra)*8);ctx.lineTo(Math.cos(ra+Math.PI)*24,Math.sin(ra+Math.PI)*8);ctx.stroke();ctx.restore();
+    ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(sx,sy,16,8,0,0,Math.PI*2);ctx.fill();ctx.fillRect(sx+14,sy-2,13,3);ctx.fillStyle=color+'77';ctx.beginPath();ctx.arc(sx-5,sy-5,5,0,Math.PI*2);ctx.fill();
+    if(t%2===0)P.push(new Pt(sx+(Math.random()-.5)*28,sy+8,(Math.random()-.5)*2,.7,14,'rgba(110,90,60,.3)',2));
+    if(!st.tgts)st.tgts=[{x:dx+(Math.random()-.5)*28,y:dy+(Math.random()-.5)*18,alive:true},{x:dx+(Math.random()-.5)*28,y:dy+(Math.random()-.5)*18,alive:true},{x:dx,y:dy,alive:true}];
+    [55,105,155].forEach((ft,i)=>{if(t===ft)st['m'+i]={x:sx,y:sy,hit:false};const m=st['m'+i];if(!m)return;if(!m.hit){const mp=Math.min(1,(t-ft)/42);m.x=sx+(st.tgts[i].x-sx)*mp;m.y=sy+(st.tgts[i].y-sy)*mp;smk(P,m.x,m.y,'rgba(255,120,0,.35)');if(mp>.93&&st.tgts[i].alive){m.hit=true;st.tgts[i].alive=false;burst(P,st.tgts[i].x,st.tgts[i].y,'#ff5500','#ffcc00',38);}if(!m.hit){ctx.fillStyle=color;ctx.beginPath();ctx.arc(m.x,m.y,3,0,Math.PI*2);ctx.fill();}}});
+    st.tgts.forEach(tg=>{if(tg.alive){ctx.strokeStyle='rgba(192,48,48,.65)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(tg.x,tg.y,7,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(tg.x-10,tg.y);ctx.lineTo(tg.x+10,tg.y);ctx.moveTo(tg.x,tg.y-10);ctx.lineTo(tg.x,tg.y+10);ctx.stroke();}});
     P.forEach(p=>{p.tick();p.draw(ctx);}); st.P=P.filter(p=>!p.dead);
-    const kl=st.tgts.filter(tg=>!tg.alive).length;
-    _label(ctx,sx,sy,`NOE HOVER  ·  ATGM ${[55,105,155].filter(ft=>t>ft).length}/3  ·  KILLS ${kl}/3`,color);
-    if(kl===3&&P.length===0) st._done=true;
+    const kl=st.tgts.filter(tg=>!tg.alive).length;lbl(ctx,sx,sy,`NOE HOVER  ATGM ${[55,105,155].filter(ft=>t>ft).length}/3  K:${kl}`,color);
+    if(kl===3&&P.length===0) done=true;
+  }
+  else if(type==='torpedo'){
+    const dur=spd*1.2,prog=Math.min(t/dur,1),mx=sx+(dx-sx)*prog,my=sy+(dy-sy)*prog;
+    if(t%3===0&&prog<.95)smk(P,mx,my,'rgba(0,160,220,.28)');
+    P.forEach(p=>{p.tick();p.draw(ctx);}); st.P=P.filter(p=>!p.dead);
+    if(prog>.94&&!st.ex){st.ex=true;burst(P,dx,dy,'#ff5500','#ffcc00',40);}
+    ctx.save();ctx.setLineDash([3,7]);ctx.strokeStyle=color+'22';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(dx,dy);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+    if(prog<.93){ctx.fillStyle=color;ctx.shadowBlur=6;ctx.shadowColor='#00aacc';ctx.beginPath();ctx.arc(mx,my,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+    lbl(ctx,sx,sy,`TORPEDO  ${Math.round(prog*100)}%  ${st.ex?'✓ HIT':'HOMING'}`,color);
+    if(st.ex&&P.length===0) done=true;
+  }
+  else if(type==='armor'){
+    if(!st.u)st.u=Array.from({length:4},(_,i)=>({x:sx+i*14-20,y:sy+(i-1.5)*11,off:i*.7}));
+    const ddx=dx-sx,ddy=dy-sy,al=Math.hypot(ddx,ddy)||1;
+    st.u.forEach((u,i)=>{u.x+=.7*(ddx/al)+Math.sin(t*.06+u.off)*.2;u.y+=.7*(ddy/al)+Math.sin(t*.04+u.off)*.15;if(Math.hypot(u.x-dx,u.y-dy)>25&&t%3===0)P.push(new Pt(u.x-8,u.y+5,(Math.random()-.5)*1.2,.4,16,'rgba(100,85,55,.3)',2));ctx.save();ctx.translate(u.x,u.y);ctx.rotate(Math.atan2(ddy,ddx));ctx.fillStyle=color+'cc';ctx.fillRect(-10,-5,20,10);ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,-1,5,0,Math.PI*2);ctx.fill();ctx.fillRect(5,-1.5,9,3);ctx.restore();});
+    if(!st.e)st.e=[{x:dx,y:dy,a:true},{x:dx+(Math.random()-.5)*26,y:dy+(Math.random()-.5)*18,a:true},{x:dx+(Math.random()-.5)*26,y:dy+(Math.random()-.5)*18,a:true}];
+    st.e.forEach(e=>{const n=st.u[st.u.length-1];if(Math.hypot(n.x-e.x,n.y-e.y)<28&&e.a){e.a=false;burst(P,e.x,e.y,'#ff5500','#ffcc00',30);}if(e.a){ctx.save();ctx.translate(e.x,e.y);ctx.fillStyle='rgba(192,48,48,.7)';ctx.fillRect(-10,-5,20,10);ctx.fillStyle=TC.CRITICAL;ctx.beginPath();ctx.arc(0,-1,5,0,Math.PI*2);ctx.fill();ctx.fillRect(5,-1.5,9,3);ctx.restore();}});
+    P.forEach(p=>{p.tick();p.draw(ctx);}); st.P=P.filter(p=>!p.dead);
+    lbl(ctx,sx,sy,`ARMOR ADV  K:${st.e.filter(e=>!e.a).length}/3`,color);
+    if(st.e.filter(e=>!e.a).length===3&&P.length===0) done=true;
   }
 
-  else if(type==='armor') {
-    if(!st.units) st.units=Array.from({length:4},(_,i)=>({x:sx+i*14-20,y:sy+(i-1.5)*11,off:i*.7}));
-    const ddx=dx-sx, ddy=dy-sy, alen=Math.hypot(ddx,ddy)||1;
-    st.units.forEach((u,i)=>{
-      u.x+=(.7*(ddx/alen)+Math.sin(t*.06+u.off)*.2); u.y+=(.7*(ddy/alen)+Math.sin(t*.04+u.off)*.15);
-      const atDst=Math.hypot(u.x-dx,u.y-dy)<30;
-      if(!atDst){ if(t%3===0) P.push(new Ptcl(u.x-8,u.y+5,(Math.random()-.5)*1.2,.4,16,'rgba(120,100,70,.3)',2)); }
-      ctx.save(); ctx.translate(u.x,u.y); ctx.rotate(Math.atan2(ddy,ddx));
-      ctx.fillStyle=color+'cc'; ctx.fillRect(-10,-5,20,10); ctx.fillStyle=color; ctx.beginPath(); ctx.arc(0,-1,5,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle=color; ctx.fillRect(5,-1.5,9,3); ctx.restore();
-    });
-    if(!st.enemies){ st.enemies=[{x:dx,y:dy,alive:true},{x:dx+(Math.random()-.5)*30,y:dy+(Math.random()-.5)*20,alive:true},{x:dx+(Math.random()-.5)*30,y:dy+(Math.random()-.5)*20,alive:true}]; }
-    st.enemies.forEach(e=>{ const n=st.units[st.units.length-1]; if(Math.hypot(n.x-e.x,n.y-e.y)<30&&e.alive){ e.alive=false; burst(P,e.x,e.y,'#ff5500','#ffcc00',35); }
-      if(e.alive){ ctx.save(); ctx.translate(e.x,e.y); ctx.fillStyle='rgba(200,40,40,.75)'; ctx.fillRect(-10,-5,20,10); ctx.fillStyle='#cc2828'; ctx.beginPath(); ctx.arc(0,-1,5,0,Math.PI*2); ctx.fill(); ctx.fillRect(5,-1.5,9,3); ctx.restore(); }});
-    P.forEach(p=>{p.tick();p.draw(ctx);}); st.P=P.filter(p=>!p.dead);
-    _label(ctx,sx,sy,`ARMOR ADVANCE  ·  KILLS ${st.enemies.filter(e=>!e.alive).length}/3`,color);
-    if(st.enemies.filter(e=>!e.alive).length===3&&P.length===0) st._done=true;
-  }
+  return done;
 }
 
-function _label(ctx,x,y,text,color){
-  ctx.font="bold 8px 'Share Tech Mono',monospace"; ctx.textAlign='center'; ctx.textBaseline='bottom';
-  const tw=ctx.measureText(text).width;
-  ctx.fillStyle='rgba(4,7,12,.85)'; ctx.fillRect(x-tw/2-6,y-35,tw+12,14);
-  ctx.strokeStyle=color+'28'; ctx.lineWidth=.8; ctx.strokeRect(x-tw/2-6,y-35,tw+12,14);
-  ctx.fillStyle=color+'cc'; ctx.fillText(text,x,y-22);
+function lbl(ctx,x,y,txt,color){
+  ctx.font="bold 8px 'Share Tech Mono','Courier New',monospace";ctx.textAlign='center';ctx.textBaseline='bottom';
+  const tw=ctx.measureText(txt).width;
+  ctx.fillStyle='rgba(3,5,9,.88)';ctx.fillRect(x-tw/2-6,y-34,tw+12,14);
+  ctx.strokeStyle=color+'22';ctx.lineWidth=.8;ctx.strokeRect(x-tw/2-6,y-34,tw+12,14);
+  ctx.fillStyle=color+'cc';ctx.fillText(txt,x,y-21);
 }
 
-// ═══════════════════════════════════════════════════════════════
-// UI BUILDERS
-// ═══════════════════════════════════════════════════════════════
-function buildUI(){ buildNationList(); buildCatTabs(); buildEqList(); }
-
-function buildNationList(){
-  document.getElementById('nation-list').innerHTML=Object.entries(COUNTRIES).map(([k,c])=>`
-    <div class="nation-row ${k===selCtry?'sel':''}" onclick="selectCountry('${k}')"
-      style="background:${k===selCtry?c.color+'14':'transparent'};border-color:${k===selCtry?c.color+'44':'transparent'};color:${k===selCtry?c.color:'var(--dim)'}">
-      <span style="font-size:13px">${c.flag}</span>
-      <span style="flex:1;font-size:10px">${c.name}</span>
-      <span style="font-size:8px;background:${c.color}18;color:${c.color};border:1px solid ${c.color}28;padding:1px 5px">${units.filter(u=>u.country===k).length}</span>
-    </div>`).join('');
-}
-
-function buildCatTabs(){
-  const cc=COUNTRIES[selCtry].color;
-  document.getElementById('cat-tabs').innerHTML=CATS.map(c=>`
-    <div class="cat-tab ${c===selCat?'sel':''}" onclick="selectCat('${c}')"
-      style="${c===selCat?`border-color:${cc};color:${cc};background:${cc}0a`:''}">${CLBL[c]}</div>`).join('');
-}
-
-function buildEqList(){
-  const cc=COUNTRIES[selCtry].color;
-  const eqs=COUNTRIES[selCtry].equipment[selCat]||[];
-  document.getElementById('eq-list').innerHTML=
-    `<div class="s-label" style="margin-bottom:6px">${CLBL[selCat].toUpperCase()}</div>`
-    +eqs.map(eq=>{
-      const isP=placing?.id===eq.id;
-      const hasEng=engagements.some(e=>{const u=units.find(u=>u.id===e.srcId);return u&&u.id===eq.id;});
-      return`<div class="eq-card ${isP?'placing':hasEng?'simming':''}">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px;margin-bottom:2px">
-          <div class="eq-name" style="color:${isP||hasEng?cc:'var(--bright)'}">${eq.name}</div>
-          <span class="threat" style="color:${TC[eq.threat]}">${eq.threat}</span>
-        </div>
-        <div class="eq-type">${eq.type}</div>
-        <div style="font-size:7px;color:var(--dim);margin-bottom:5px">
-          ${eq.range_km?`Range: ${eq.range_km.toLocaleString()} km`:''}
-          ${eq.speed_mach?`  ·  Mach ${eq.speed_mach}`:''}
-        </div>
-        <div class="eq-btns">
-          <button class="eq-btn ${isP?'place-active':''}" onclick="togglePlace('${eq.id}')">${isP?'◉ PLACING':'⊕ PLACE'}</button>
-        </div>
-      </div>`;
-    }).join('');
-}
-
-function renderOOB(){
-  const lines=Object.entries(COUNTRIES).map(([k,c])=>{
-    const n=units.filter(u=>u.country===k).length; if(!n) return '';
-    return`<div class="oob-row"><span style="font-size:12px">${c.flag}</span>
-      <div style="flex:1"><div style="font-size:8px;color:${c.color}">${c.name}</div>
-      <div class="oob-bar"><div class="oob-fill" style="width:${Math.min(100,n*10)}%;color:${c.color}"></div></div></div>
-      <span style="font-size:9px;color:${c.color};font-weight:bold">${n}</span></div>`;
-  }).join('');
-  document.getElementById('oob').innerHTML=lines||`<div style="font-size:8px;color:var(--dim)">No units deployed</div>`;
-}
-
-function renderUnitList(){
-  const ul=document.getElementById('unit-list');
-  document.getElementById('unit-count').textContent=units.length;
-  if(!units.length){ ul.innerHTML=`<div style="font-size:8px;color:var(--dim)">No units deployed</div>`; return; }
-  ul.innerHTML=units.map(u=>`
-    <div class="ul-row ${u.id===selUnitId?'sel':''}" onclick="selectUnit(${u.id})">
-      <span class="ul-threat" style="background:${TC[u.threat]}"></span>
-      <span class="ul-name" style="color:${COUNTRIES[u.country].color}">${u.name}</span>
-      ${engagements.some(e=>e.srcId===u.id)?`<span style="font-size:7px;color:var(--accent)">●</span>`:''}
-      ${engagements.some(e=>e.dstId===u.id)?`<span style="font-size:7px;color:var(--red)">🎯</span>`:''}
-    </div>`).join('');
-}
-
-function renderProfile(u){
-  if(!u){ document.getElementById('unit-profile').innerHTML=`<div class="profile-empty">Select a unit to inspect.</div>`; return; }
-  const cc=COUNTRIES[u.country].color;
-  const hasEng=engagements.some(e=>e.srcId===u.id);
-  const eng=engagements.find(e=>e.srcId===u.id);
-  const svg=getSilhouette(u);
-  document.getElementById('unit-profile').innerHTML=`
-    <div class="profile-card" style="border-color:${cc}28">
-      <div style="color:${cc};margin-bottom:8px;opacity:.9">${svg}</div>
-      <div class="pf-name" style="color:${cc}">${u.name}</div>
-      <div class="pf-type">${u.type}</div>
-      <div class="pf-row"><span class="pf-key">NATION</span><span class="pf-val" style="color:${cc}">${COUNTRIES[u.country].flag} ${COUNTRIES[u.country].name}</span></div>
-      <div class="pf-row"><span class="pf-key">THREAT</span><span class="pf-val" style="color:${TC[u.threat]}">${u.threat}</span></div>
-      ${u.range_km?`<div class="pf-row"><span class="pf-key">RANGE</span><span class="pf-val">${u.range_km.toLocaleString()} km</span></div>`:''}
-      ${u.speed_mach?`<div class="pf-row"><span class="pf-key">SPEED</span><span class="pf-val">Mach ${u.speed_mach}</span></div>`:''}
-      <div class="pf-row"><span class="pf-key">POSITION</span><span class="pf-val">${u.lat.toFixed(3)}°N ${u.lng.toFixed(3)}°E</span></div>
-      <div class="pf-btns">
-        <button class="pf-btn target ${hasEng?'engage-active':''}" onclick="startTargeting(${u.id})">${hasEng?'● ENGAGED':'🎯 SET TARGET'}</button>
-        ${hasEng?`<button class="pf-btn" style="border-color:var(--dim);color:var(--dim)" onclick="removeEngagement(${u.id})">✕ DISENGAGE</button>`:''}
-      </div>
-      <div class="pf-btns">
-        <button class="pf-btn remove" onclick="removeUnit(${u.id})">✕ REMOVE</button>
-      </div>
-    </div>`;
-  renderEngagementPanel(u.id);
-}
-
-function renderEngagementPanel(srcId){
-  const eng=engagements.find(e=>e.srcId===srcId);
-  const panel=document.getElementById('engagement-panel');
-  const info=document.getElementById('engagement-info');
-  if(!eng){ panel.style.display='none'; return; }
-  panel.style.display='block';
-  const src=units.find(u=>u.id===srcId);
-  const dst=eng.dstId?units.find(u=>u.id===eng.dstId):null;
-  const cc=COUNTRIES[src.country].color;
-  const dist=Math.round(MAP.distance([src.lat,src.lng],[eng.dstLat,eng.dstLng])/1000);
-  info.innerHTML=`
-    <div style="font-size:9px;color:${cc};font-weight:bold;margin-bottom:3px">● ${src.name}</div>
-    <div style="font-size:7px;color:var(--dim);margin-bottom:2px">MODE: ${getSimType(src.id).toUpperCase().replace('_',' ')}</div>
-    <div style="font-size:7px;color:var(--dim);margin-bottom:2px">TARGET: ${dst?dst.name:`${eng.dstLat.toFixed(3)}°N ${eng.dstLng.toFixed(3)}°E`}</div>
-    <div style="font-size:7px;color:var(--dim);margin-bottom:6px">RANGE: ${dist} km  ·  T+${(eng.t/60).toFixed(1)}s</div>
-    <button onclick="removeEngagement(${srcId})" style="width:100%;padding:4px;font-size:7px;border:1px solid #441414;color:var(--red);background:none;cursor:pointer;font-family:var(--mono)">✕ ABORT ENGAGEMENT</button>`;
-}
-
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // ACTIONS
-// ═══════════════════════════════════════════════════════════════
-function selectCountry(k){ selCtry=k; buildNationList(); buildCatTabs(); buildEqList(); }
-function selectCat(c){ selCat=c; buildCatTabs(); buildEqList(); }
+// ═══════════════════════════════════════════════════════
+function selectCountry(k){selCtry=k;buildNationList();buildCatTabs();buildEqList();}
+function selectCat(c){selCat=c;buildCatTabs();buildEqList();}
 
 function togglePlace(eqId){
   const eq=COUNTRIES[selCtry].equipment[selCat].find(e=>e.id===eqId);
-  if(placing?.id===eqId){ cancelPlace(); return; }
+  if(placing?.id===eqId){cancelPlace();return;}
   placing=eq;
-  document.getElementById('place-bar').style.display='block';
-  document.getElementById('place-name').textContent=eq.name;
-  document.getElementById('placing-hint').style.display='block';
-  document.getElementById('map-wrap').classList.add('placing');
+  document.getElementById('plbar').style.display='block';
+  document.getElementById('plname').textContent=eq.name;
+  document.getElementById('ph').style.display='block';
+  document.getElementById('mw').style.cursor='crosshair';
   buildEqList();
 }
-
 function cancelPlace(){
   placing=null;
-  document.getElementById('place-bar').style.display='none';
-  document.getElementById('placing-hint').style.display='none';
-  document.getElementById('map-wrap').classList.remove('placing');
+  document.getElementById('plbar').style.display='none';
+  document.getElementById('ph').style.display='none';
+  document.getElementById('mw').style.cursor='';
   buildEqList();
 }
 
 function removeUnit(id){
   const u=units.find(u=>u.id===id);
-  if(u?._marker) MAP.removeLayer(u._marker);
+  if(u?._el) u._el.remove();
   units=units.filter(u=>u.id!==id);
-  engagements=engagements.filter(e=>e.srcId!==id&&e.dstId!==id);
-  if(selUnitId===id){ selUnitId=null; document.getElementById('unit-profile').innerHTML=`<div class="profile-empty">Select a unit to inspect.</div>`; }
-  buildNationList(); renderOOB(); renderUnitList(); buildEqList();
-  if(engagements.length===0){ const ctx=document.getElementById('overlay').getContext('2d'); ctx.clearRect(0,0,9999,9999); document.getElementById('endsim-btn').style.display='none'; document.getElementById('sim-hud').style.display='none'; }
+  engs=engs.filter(e=>e.srcId!==id&&e.dstId!==id);
+  if(selId===id){selId=null;document.getElementById('uprof').innerHTML='<div style="font-size:8px;color:var(--dim);line-height:2">Select a unit to inspect.</div>';}
+  document.getElementById('engpanel').style.display='none';
+  buildNationList();renderOOB();renderUnitList();buildEqList();updateAllMarkers();
 }
-
 function clearAll(){
-  units.forEach(u=>{ if(u._marker) MAP.removeLayer(u._marker); });
-  units=[]; engagements=[]; selUnitId=null; placing=null; targetingUnitId=null;
-  cancelPlace(); cancelTargeting();
-  document.getElementById('unit-profile').innerHTML=`<div class="profile-empty">Select a unit to inspect.</div>`;
-  document.getElementById('engagement-panel').style.display='none';
-  document.getElementById('endsim-btn').style.display='none';
-  document.getElementById('sim-hud').style.display='none';
-  document.getElementById('overlay').getContext('2d').clearRect(0,0,9999,9999);
-  buildNationList(); renderOOB(); renderUnitList(); buildEqList();
+  units.forEach(u=>{if(u._el)u._el.remove();}); units=[];engs=[];selId=null;placing=null;tgtSrc=null;
+  cancelPlace();cancelTargeting();
+  document.getElementById('unit-layer').innerHTML='';
+  document.getElementById('uprof').innerHTML='<div style="font-size:8px;color:var(--dim);line-height:2">Select a unit to inspect.</div>';
+  document.getElementById('engpanel').style.display='none';
+  buildNationList();renderOOB();renderUnitList();buildEqList();
+}
+function toggleBriefing(){
+  briefOn=!briefOn;
+  const b=document.getElementById('bb'),btn=document.getElementById('bbb');
+  b.style.display=briefOn?'block':'none';
+  if(briefOn)b.textContent=`⬛ CLASSIFIED  ·  ${document.getElementById('sc').value.toUpperCase()}  ·  ${new Date().toUTCString()}`;
+  btn.textContent=briefOn?'● BRIEFING':'○ BRIEFING';btn.classList.toggle('on',briefOn);
 }
 
-function toggleBriefing(){
-  briefingOn=!briefingOn;
-  const bar=document.getElementById('briefing-bar'), btn=document.getElementById('briefing-btn');
-  bar.style.display=briefingOn?'block':'none';
-  if(briefingOn){ bar.textContent=`⬛ CLASSIFIED  ·  ${document.getElementById('scenario-in').value.toUpperCase()}  ·  ${new Date().toUTCString().replace('GMT','Z')}`; }
-  btn.textContent=briefingOn?'● BRIEFING':'○ BRIEFING';
-  btn.classList.toggle('active',briefingOn);
+// ═══════════════════════════════════════════════════════
+// RENDER UI
+// ═══════════════════════════════════════════════════════
+function buildUI(){buildNationList();buildCatTabs();buildEqList();}
+
+function buildNationList(){
+  document.getElementById('nlist').innerHTML=Object.entries(COUNTRIES).map(([k,c])=>`
+    <div class="nr" onclick="selectCountry('${k}')"
+      style="background:${k===selCtry?c.color+'10':'transparent'};border-color:${k===selCtry?c.color+'35':'transparent'};color:${k===selCtry?c.color:'var(--dim)'}">
+      <span style="font-size:13px">${c.flag}</span>
+      <span style="flex:1;font-weight:${k===selCtry?'bold':'normal'}">${c.name}</span>
+      <span style="font-size:8px;background:${c.color+'18'};color:${c.color};border:1px solid ${c.color+'28'};padding:1px 5px">${units.filter(u=>u.country===k).length}</span>
+    </div>`).join('');
+}
+function buildCatTabs(){
+  const cc=COUNTRIES[selCtry].color;
+  document.getElementById('ctabs').innerHTML=CATS.map(c=>`
+    <div class="ct ${c===selCat?'on':''}" onclick="selectCat('${c}')"
+      style="${c===selCat?`border-color:${cc};color:${cc};background:${cc}0a`:''}">${CLBL[c]}</div>`).join('');
+}
+function buildEqList(){
+  const cc=COUNTRIES[selCtry].color;
+  const eqs=COUNTRIES[selCtry].equipment[selCat]||[];
+  document.getElementById('eql').innerHTML=
+    `<div class="lbl" style="margin-bottom:5px">${CLBL[selCat].toUpperCase()}</div>`+
+    eqs.map(eq=>`
+      <div class="ec ${placing?.id===eq.id?'pl':''}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px;margin-bottom:2px">
+          <div class="en" style="color:${placing?.id===eq.id?cc:'var(--hi)'}">${eq.name}</div>
+          <span class="tbadge" style="color:${TC[eq.threat]}">${eq.threat}</span>
+        </div>
+        <div class="et">${eq.type}</div>
+        <div class="er">${eq.range_km?eq.range_km.toLocaleString()+' km':''} ${eq.speed_mach?'· Mach '+eq.speed_mach:''}</div>
+        <div style="display:flex;gap:3px">
+          <button class="eb ${placing?.id===eq.id?'pa':''}" onclick="togglePlace('${eq.id}')">${placing?.id===eq.id?'◉ PLACING':'⊕ PLACE'}</button>
+        </div>
+      </div>`).join('');
+}
+function renderOOB(){
+  const lines=Object.entries(COUNTRIES).map(([k,c])=>{
+    const n=units.filter(u=>u.country===k).length; if(!n)return'';
+    return`<div class="oobr"><span style="font-size:12px">${c.flag}</span>
+      <div style="flex:1"><div style="font-size:8px;color:${c.color}">${c.name}</div>
+      <div style="height:2px;background:var(--border);margin-top:2px"><div style="height:100%;width:${Math.min(100,n*10)}%;background:${c.color};opacity:.65"></div></div></div>
+      <span style="font-size:9px;color:${c.color};font-weight:bold">${n}</span></div>`;
+  }).join('');
+  document.getElementById('oob').innerHTML=lines||'<div style="font-size:8px;color:var(--dim)">No units deployed</div>';
+}
+function renderUnitList(){
+  document.getElementById('ucnt').textContent=units.length;
+  document.getElementById('ulist').innerHTML=units.map(u=>`
+    <div class="ulr ${u.id===selId?'on':''}" onclick="selectUnit(${u.id})">
+      <span class="ult" style="background:${TC[u.threat]}"></span>
+      <span class="uln" style="color:${COUNTRIES[u.country].color}">${u.name}</span>
+      ${engs.some(e=>e.srcId===u.id)?'<span style="font-size:7px;color:#4a8ac0">●</span>':''}
+      ${engs.some(e=>e.dstId===u.id)?'<span style="font-size:7px;color:var(--red)">🎯</span>':''}
+    </div>`).join('')||'<div style="font-size:8px;color:var(--dim)">No units deployed</div>';
+}
+function renderProfile(u){
+  if(!u)return;
+  const cc=COUNTRIES[u.country].color;
+  const eng=engs.find(e=>e.srcId===u.id);
+  document.getElementById('uprof').innerHTML=`
+    <div class="pc" style="border-color:${cc}22">
+      <div style="color:${cc};margin-bottom:8px">${milSym(getCat(u),32)}</div>
+      <div class="pn" style="color:${cc}">${u.name}</div>
+      <div class="py">${u.type}</div>
+      ${[['NATION',`${COUNTRIES[u.country].flag} ${COUNTRIES[u.country].name}`,cc],
+        ['THREAT',u.threat,TC[u.threat]],
+        ...(u.range_km?[['RANGE',u.range_km.toLocaleString()+' km','var(--text)']]:[] ),
+        ...(u.speed_mach?[['SPEED','Mach '+u.speed_mach,'var(--text)']]:[] ),
+        ['POS',u.lat.toFixed(2)+'°N '+u.lon.toFixed(2)+'°E','var(--mid)'],
+      ].map(([k,v,vc])=>`<div class="pr"><span class="pk">${k}</span><span class="pv" style="color:${vc}">${v}</span></div>`).join('')}
+      <div style="display:flex;gap:4px;margin-top:8px">
+        <button class="pbtn tg" style="${eng?`border-color:${cc};color:${cc}`:''}" onclick="startTargeting(${u.id})">${eng?'● ENGAGED':'🎯 SET TARGET'}</button>
+        ${eng?`<button class="pbtn" style="border-color:var(--dim);color:var(--mid)" onclick="removeEng(${u.id})">✕ ABORT</button>`:''}
+      </div>
+      <div style="display:flex;gap:4px;margin-top:4px">
+        <button class="pbtn rm" onclick="removeUnit(${u.id})">✕ REMOVE UNIT</button>
+      </div>
+    </div>`;
+
+  const ep=document.getElementById('engpanel'),ei=document.getElementById('enginfo');
+  if(eng){
+    ep.style.display='block';
+    const dst=eng.dstId?units.find(u=>u.id===eng.dstId):null;
+    // Rough km from canvas pixels (very approximate since we know map bounds)
+    const latDiff=Math.abs(eng.dstLat-u.lat), lonDiff=Math.abs(eng.dstLon-u.lon);
+    const approxKm=Math.round(Math.hypot(latDiff,lonDiff)*111);
+    ei.innerHTML=`
+      <div style="font-size:9px;color:${cc};font-weight:bold;margin-bottom:3px">● ${u.name}</div>
+      <div style="font-size:7px;color:var(--dim);margin-bottom:2px">MODE: ${simType(u.id).toUpperCase().replace('_',' ')}</div>
+      <div style="font-size:7px;color:var(--dim);margin-bottom:2px">TARGET: ${dst?dst.name:`${eng.dstLat.toFixed(2)}°N ${eng.dstLon.toFixed(2)}°E`}</div>
+      <div style="font-size:7px;color:var(--dim);margin-bottom:5px">~${approxKm} km · T+${(eng.t/60).toFixed(1)}s</div>
+      <button onclick="removeEng(${u.id})" style="width:100%;padding:4px;font-size:7px;border:1px solid #3a1010;color:var(--red);background:none;cursor:pointer;font-family:var(--mono)">✕ ABORT ENGAGEMENT</button>`;
+  } else {
+    ep.style.display='none';
+  }
 }
 </script>
 </body>
