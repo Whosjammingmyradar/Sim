@@ -1,921 +1,827 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tactical Intelligence Platform</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #060d08; overflow: hidden; font-family: 'Courier New', monospace; }
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: #050d06; }
-    ::-webkit-scrollbar-thumb { background: #00cc5540; }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Tactical Intelligence Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#05080a;overflow:hidden;font-family:'Courier New',monospace;color:#4af}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:#05080a}::-webkit-scrollbar-thumb{background:#1a4a6a}
+button{font-family:'Courier New',monospace;cursor:pointer;transition:all .15s}
+input{font-family:'Courier New',monospace}
+</style>
 </head>
 <body>
-  <div id="root"></div>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useRef,useEffect,useCallback}=React;
 
-  <script type="text/babel">
-    const { useState, useRef, useEffect, useCallback } = React;
+const TC={CRITICAL:'#ff2a2a',HIGH:'#ff8800',MEDIUM:'#f0c000',LOW:'#22cc55'};
+const COUNTRIES={
+  russia:{name:'Russia',color:'#d42020',flag:'🇷🇺',equipment:{
+    aircraft:[
+      {id:'su35',name:"Su-35S 'Flanker-E'",type:'Fighter',sym:'▲',threat:'HIGH'},
+      {id:'su57',name:"Su-57 'Felon'",type:'Stealth Fighter',sym:'▲',threat:'CRITICAL'},
+      {id:'mig29',name:"MiG-29K 'Fulcrum'",type:'Naval Fighter',sym:'▲',threat:'HIGH'},
+      {id:'tu160',name:"Tu-160 'Blackjack'",type:'Strategic Bomber',sym:'▲',threat:'CRITICAL'},
+      {id:'ka52',name:"Ka-52 'Alligator'",type:'Attack Helo',sym:'◈',threat:'HIGH'},
+    ],
+    air_defense:[
+      {id:'s400',name:"S-400 'Triumf'",type:'Long-Range SAM',sym:'◉',threat:'CRITICAL'},
+      {id:'s350',name:"S-350 'Vityaz'",type:'Medium SAM',sym:'◉',threat:'HIGH'},
+      {id:'buk',name:"SA-27 'Buk-M3'",type:'Medium SAM',sym:'◉',threat:'HIGH'},
+      {id:'tor',name:"SA-15 'Tor'",type:'Short SAM',sym:'◉',threat:'MEDIUM'},
+      {id:'nebo',name:'Nebo-M Radar',type:'EW/Radar',sym:'◎',threat:'HIGH'},
+    ],
+    missiles:[
+      {id:'iskander',name:'Iskander-M',type:'Ballistic Missile',sym:'↑',threat:'CRITICAL'},
+      {id:'kalibr',name:'SS-N-30 Kalibr',type:'Cruise Missile',sym:'↑',threat:'CRITICAL'},
+      {id:'ss26',name:'SS-26 Stone',type:'Ballistic Missile',sym:'↑',threat:'CRITICAL'},
+      {id:'tochka',name:'Tochka-U',type:'Tactical Missile',sym:'↑',threat:'HIGH'},
+    ],
+    naval:[
+      {id:'gremyashchy',name:'Gremyashchy-class',type:'Corvette',sym:'◆',threat:'HIGH'},
+      {id:'karakurt',name:'Karakurt-class',type:'Missile Corvette',sym:'◆',threat:'HIGH'},
+      {id:'soobrazitelny',name:'Soobrazitelny',type:'Frigate',sym:'◆',threat:'CRITICAL'},
+    ],
+    ground:[
+      {id:'t90',name:"T-90M 'Proryv'",type:'MBT',sym:'■',threat:'HIGH'},
+      {id:'t80',name:'T-80BVM',type:'MBT',sym:'■',threat:'HIGH'},
+      {id:'bmp3',name:'BMP-3',type:'IFV',sym:'■',threat:'MEDIUM'},
+    ],
+  }},
+  usa:{name:'United States',color:'#2255bb',flag:'🇺🇸',equipment:{
+    aircraft:[
+      {id:'f35a',name:'F-35A Lightning II',type:'Stealth Fighter',sym:'▲',threat:'CRITICAL'},
+      {id:'f22',name:'F-22 Raptor',type:'Air Superiority',sym:'▲',threat:'CRITICAL'},
+      {id:'b2',name:'B-2 Spirit',type:'Stealth Bomber',sym:'▲',threat:'CRITICAL'},
+      {id:'f16',name:'F-16C Viper',type:'Multirole',sym:'▲',threat:'HIGH'},
+      {id:'mq9',name:'MQ-9 Reaper',type:'UCAV',sym:'▲',threat:'HIGH'},
+      {id:'ah64',name:'AH-64E Apache',type:'Attack Helo',sym:'◈',threat:'HIGH'},
+    ],
+    air_defense:[
+      {id:'patriot',name:'Patriot PAC-3',type:'Long-Range SAM',sym:'◉',threat:'CRITICAL'},
+      {id:'thaad',name:'THAAD',type:'Terminal Defense',sym:'◉',threat:'CRITICAL'},
+      {id:'nasams',name:'NASAMS',type:'Medium SAM',sym:'◉',threat:'HIGH'},
+      {id:'avenger',name:'Avenger SHORAD',type:'Short SAM',sym:'◉',threat:'MEDIUM'},
+      {id:'an_tpy2',name:'AN/TPY-2 Radar',type:'EW/Radar',sym:'◎',threat:'HIGH'},
+    ],
+    missiles:[
+      {id:'atacms',name:'MGM-140 ATACMS',type:'Ballistic Missile',sym:'↑',threat:'CRITICAL'},
+      {id:'tomahawk',name:'BGM-109 Tomahawk',type:'Cruise Missile',sym:'↑',threat:'CRITICAL'},
+      {id:'himars',name:'M142 HIMARS',type:'Rocket Artillery',sym:'↑',threat:'HIGH'},
+      {id:'jassm',name:'AGM-158 JASSM',type:'Air-Launched Cruise',sym:'↑',threat:'CRITICAL'},
+    ],
+    naval:[
+      {id:'burke',name:'Arleigh Burke DDG',type:'Destroyer',sym:'◆',threat:'CRITICAL'},
+      {id:'virginia',name:'Virginia-class SSN',type:'Attack Sub',sym:'◆',threat:'CRITICAL'},
+      {id:'cvn',name:'Nimitz-class CVN',type:'Carrier',sym:'◆',threat:'CRITICAL'},
+    ],
+    ground:[
+      {id:'m1a2',name:'M1A2 SEPv3 Abrams',type:'MBT',sym:'■',threat:'HIGH'},
+      {id:'bradley',name:'M2A4 Bradley',type:'IFV',sym:'■',threat:'MEDIUM'},
+      {id:'stryker',name:'Stryker MGS',type:'Armored Vehicle',sym:'■',threat:'MEDIUM'},
+    ],
+  }},
+  china:{name:'China (PLA)',color:'#cc9900',flag:'🇨🇳',equipment:{
+    aircraft:[
+      {id:'j20',name:"J-20 'Mighty Dragon'",type:'Stealth Fighter',sym:'▲',threat:'CRITICAL'},
+      {id:'j16',name:'J-16',type:'Strike Fighter',sym:'▲',threat:'HIGH'},
+      {id:'j10c',name:'J-10C',type:'Multirole',sym:'▲',threat:'HIGH'},
+      {id:'h6k',name:"H-6K 'Badger'",type:'Strategic Bomber',sym:'▲',threat:'CRITICAL'},
+      {id:'z10',name:"Z-10 'Fierce Thunder'",type:'Attack Helo',sym:'◈',threat:'HIGH'},
+    ],
+    air_defense:[
+      {id:'hq9',name:'HQ-9B',type:'Long-Range SAM',sym:'◉',threat:'CRITICAL'},
+      {id:'hq16',name:'HQ-16',type:'Medium SAM',sym:'◉',threat:'HIGH'},
+      {id:'hq17',name:'HQ-17A',type:'Short SAM',sym:'◉',threat:'MEDIUM'},
+      {id:'jy26',name:'JY-26 Skywatch-U',type:'EW/Radar',sym:'◎',threat:'HIGH'},
+    ],
+    missiles:[
+      {id:'df21d',name:'DF-21D (ASBM)',type:'Anti-Ship Ballistic',sym:'↑',threat:'CRITICAL'},
+      {id:'df26',name:"DF-26 'Guam Killer'",type:'IRBM',sym:'↑',threat:'CRITICAL'},
+      {id:'cx10a',name:'CX-10A',type:'Cruise Missile',sym:'↑',threat:'CRITICAL'},
+    ],
+    naval:[
+      {id:'type055',name:'Type 055 Renhai',type:'Cruiser',sym:'◆',threat:'CRITICAL'},
+      {id:'type052d',name:'Type 052D',type:'Destroyer',sym:'◆',threat:'HIGH'},
+      {id:'type003',name:'Fujian CVN',type:'Carrier',sym:'◆',threat:'CRITICAL'},
+    ],
+    ground:[
+      {id:'ztz99',name:'ZTZ-99A',type:'MBT',sym:'■',threat:'HIGH'},
+      {id:'zbd04',name:'ZBD-04A',type:'IFV',sym:'■',threat:'MEDIUM'},
+    ],
+  }},
+  nato:{name:'NATO Allies',color:'#1a7a3c',flag:'🌐',equipment:{
+    aircraft:[
+      {id:'eurofighter',name:'Eurofighter Typhoon',type:'Air Superiority',sym:'▲',threat:'HIGH'},
+      {id:'rafale',name:'Dassault Rafale F4',type:'Multirole',sym:'▲',threat:'HIGH'},
+      {id:'gripen',name:'Saab JAS 39E Gripen',type:'Multirole',sym:'▲',threat:'HIGH'},
+      {id:'f35b',name:'F-35B Lightning II',type:'STOVL Fighter',sym:'▲',threat:'CRITICAL'},
+    ],
+    air_defense:[
+      {id:'aster30',name:'Aster 30 SAMP/T',type:'Medium SAM',sym:'◉',threat:'HIGH'},
+      {id:'iris_t',name:'IRIS-T SLM',type:'Short SAM',sym:'◉',threat:'HIGH'},
+      {id:'hawk',name:'MIM-23 HAWK',type:'Medium SAM',sym:'◉',threat:'MEDIUM'},
+      {id:'ground403',name:'Ground Master 403',type:'EW/Radar',sym:'◎',threat:'HIGH'},
+    ],
+    missiles:[
+      {id:'scalp',name:'SCALP-EG/Storm Shadow',type:'Cruise Missile',sym:'↑',threat:'CRITICAL'},
+      {id:'meteor',name:'Meteor BVRAAM',type:'Air-to-Air',sym:'↑',threat:'CRITICAL'},
+      {id:'pzh2000',name:'PzH 2000 SPH',type:'Self-Propelled Howitzer',sym:'↑',threat:'HIGH'},
+    ],
+    naval:[
+      {id:'fremm',name:'FREMM Frigate',type:'Frigate',sym:'◆',threat:'HIGH'},
+      {id:'type45',name:'Type 45 Destroyer',type:'Destroyer',sym:'◆',threat:'HIGH'},
+      {id:'astute',name:'Astute-class SSN',type:'Attack Sub',sym:'◆',threat:'CRITICAL'},
+    ],
+    ground:[
+      {id:'leopard2a7',name:'Leopard 2A7+',type:'MBT',sym:'■',threat:'HIGH'},
+      {id:'challenger3',name:'Challenger 3',type:'MBT',sym:'■',threat:'HIGH'},
+      {id:'cv90',name:'CV90 Mk.IV',type:'IFV',sym:'■',threat:'MEDIUM'},
+    ],
+  }},
+};
 
-    // ═══════════════════════════════════════════════════════════
-    // SIMULATION ENGINE
-    // ═══════════════════════════════════════════════════════════
-    const SIM_TYPES = {
-      BALLISTIC_MISSILE: 'ballistic_missile',
-      CRUISE_MISSILE: 'cruise_missile',
-      SAM_INTERCEPT: 'sam_intercept',
-      AIR_RADAR: 'air_radar',
-      DOGFIGHT: 'dogfight',
-      NAVAL_SALVO: 'naval_salvo',
-      GROUND_ADVANCE: 'ground_advance',
-      STEALTH_STRIKE: 'stealth_strike',
-      ANTI_SHIP: 'anti_ship',
-      HELICOPTER_ATTACK: 'helicopter_attack',
-    };
+const CATS=['aircraft','air_defense','missiles','naval','ground'];
+const CLBL={aircraft:'Aircraft',air_defense:'Air Defense',missiles:'Missiles',naval:'Naval',ground:'Ground'};
+let UID=1;
 
-    function getSimType(equipmentId) {
-      const map = {
-        iskander: SIM_TYPES.BALLISTIC_MISSILE, ss26: SIM_TYPES.BALLISTIC_MISSILE,
-        ss21: SIM_TYPES.BALLISTIC_MISSILE, tochka: SIM_TYPES.BALLISTIC_MISSILE,
-        atacms: SIM_TYPES.BALLISTIC_MISSILE, df26: SIM_TYPES.BALLISTIC_MISSILE,
-        himars: SIM_TYPES.BALLISTIC_MISSILE, pzh2000: SIM_TYPES.BALLISTIC_MISSILE,
-        kalibr: SIM_TYPES.CRUISE_MISSILE, tomahawk: SIM_TYPES.CRUISE_MISSILE,
-        scalp: SIM_TYPES.CRUISE_MISSILE, jassm: SIM_TYPES.CRUISE_MISSILE,
-        cx10a: SIM_TYPES.CRUISE_MISSILE, mq9: SIM_TYPES.CRUISE_MISSILE,
-        tu160: SIM_TYPES.CRUISE_MISSILE, h6k: SIM_TYPES.CRUISE_MISSILE,
-        df21d: SIM_TYPES.ANTI_SHIP, virginia: SIM_TYPES.ANTI_SHIP, astute: SIM_TYPES.ANTI_SHIP,
-        s400: SIM_TYPES.SAM_INTERCEPT, s350: SIM_TYPES.SAM_INTERCEPT, buk: SIM_TYPES.SAM_INTERCEPT,
-        tor: SIM_TYPES.SAM_INTERCEPT, tunguska: SIM_TYPES.SAM_INTERCEPT,
-        patriot: SIM_TYPES.SAM_INTERCEPT, thaad: SIM_TYPES.SAM_INTERCEPT,
-        nasams: SIM_TYPES.SAM_INTERCEPT, avenger: SIM_TYPES.SAM_INTERCEPT,
-        hq9: SIM_TYPES.SAM_INTERCEPT, hq16: SIM_TYPES.SAM_INTERCEPT,
-        hq17: SIM_TYPES.SAM_INTERCEPT, aster30: SIM_TYPES.SAM_INTERCEPT,
-        iris_t: SIM_TYPES.SAM_INTERCEPT, hawk: SIM_TYPES.SAM_INTERCEPT,
-        nebo: SIM_TYPES.AIR_RADAR, an_tpy2: SIM_TYPES.AIR_RADAR,
-        jy26: SIM_TYPES.AIR_RADAR, ground403: SIM_TYPES.AIR_RADAR,
-        f22: SIM_TYPES.DOGFIGHT, f16: SIM_TYPES.DOGFIGHT, su35: SIM_TYPES.DOGFIGHT,
-        mig29: SIM_TYPES.DOGFIGHT, j16: SIM_TYPES.DOGFIGHT, j10c: SIM_TYPES.DOGFIGHT,
-        eurofighter: SIM_TYPES.DOGFIGHT, rafale: SIM_TYPES.DOGFIGHT,
-        gripen: SIM_TYPES.DOGFIGHT, meteor: SIM_TYPES.DOGFIGHT, pl15: SIM_TYPES.DOGFIGHT,
-        f35a: SIM_TYPES.STEALTH_STRIKE, b2: SIM_TYPES.STEALTH_STRIKE,
-        su57: SIM_TYPES.STEALTH_STRIKE, j20: SIM_TYPES.STEALTH_STRIKE,
-        tornado: SIM_TYPES.STEALTH_STRIKE,
-        gremyashchy: SIM_TYPES.NAVAL_SALVO, karakurt: SIM_TYPES.NAVAL_SALVO,
-        soobrazitelny: SIM_TYPES.NAVAL_SALVO, burke: SIM_TYPES.NAVAL_SALVO,
-        cvn: SIM_TYPES.NAVAL_SALVO, type055: SIM_TYPES.NAVAL_SALVO,
-        type052d: SIM_TYPES.NAVAL_SALVO, type003: SIM_TYPES.NAVAL_SALVO,
-        fremm: SIM_TYPES.NAVAL_SALVO, type45: SIM_TYPES.NAVAL_SALVO,
-        t90: SIM_TYPES.GROUND_ADVANCE, t80: SIM_TYPES.GROUND_ADVANCE,
-        bmp3: SIM_TYPES.GROUND_ADVANCE, m1a2: SIM_TYPES.GROUND_ADVANCE,
-        bradley: SIM_TYPES.GROUND_ADVANCE, stryker: SIM_TYPES.GROUND_ADVANCE,
-        ztz99: SIM_TYPES.GROUND_ADVANCE, zbd04: SIM_TYPES.GROUND_ADVANCE,
-        leopard2a7: SIM_TYPES.GROUND_ADVANCE, challenger3: SIM_TYPES.GROUND_ADVANCE,
-        cv90: SIM_TYPES.GROUND_ADVANCE,
-        ah64: SIM_TYPES.HELICOPTER_ATTACK, ka52: SIM_TYPES.HELICOPTER_ATTACK,
-        z10: SIM_TYPES.HELICOPTER_ATTACK,
-      };
-      return map[equipmentId] || SIM_TYPES.BALLISTIC_MISSILE;
-    }
+function getSimType(id){
+  const m={
+    su35:'dogfight',su57:'stealth',mig29:'dogfight',tu160:'cruise',ka52:'helicopter',
+    f35a:'stealth',f22:'dogfight',b2:'stealth',f16:'dogfight',mq9:'cruise',ah64:'helicopter',
+    j20:'stealth',j16:'dogfight',j10c:'dogfight',h6k:'cruise',z10:'helicopter',
+    eurofighter:'dogfight',rafale:'dogfight',gripen:'dogfight',f35b:'stealth',
+    s400:'sam',s350:'sam',buk:'sam',tor:'sam',nebo:'radar',
+    patriot:'sam',thaad:'sam',nasams:'sam',avenger:'sam',an_tpy2:'radar',
+    hq9:'sam',hq16:'sam',hq17:'sam',jy26:'radar',
+    aster30:'sam',iris_t:'sam',hawk:'sam',ground403:'radar',
+    iskander:'ballistic',kalibr:'cruise',ss26:'ballistic',tochka:'ballistic',
+    atacms:'ballistic',tomahawk:'cruise',himars:'ballistic',jassm:'cruise',
+    df21d:'antiship',df26:'ballistic',cx10a:'cruise',
+    scalp:'cruise',meteor:'dogfight',pzh2000:'ballistic',
+    gremyashchy:'naval',karakurt:'naval',soobrazitelny:'naval',
+    burke:'naval',virginia:'antiship',cvn:'naval',
+    type055:'naval',type052d:'naval',type003:'naval',
+    fremm:'naval',type45:'naval',astute:'antiship',
+    t90:'armor',t80:'armor',bmp3:'armor',
+    m1a2:'armor',bradley:'armor',stryker:'armor',
+    ztz99:'armor',zbd04:'armor',leopard2a7:'armor',challenger3:'armor',cv90:'armor',
+  };
+  return m[id]||'ballistic';
+}
 
-    class Particle {
-      constructor(x, y, vx, vy, life, color, size = 2) {
-        this.x = x; this.y = y; this.vx = vx; this.vy = vy;
-        this.life = life; this.maxLife = life; this.color = color; this.size = size;
-      }
-      update() {
-        this.x += this.vx; this.y += this.vy;
-        this.vy += 0.05; this.vx *= 0.98; this.vy *= 0.98; this.life--;
-      }
-      draw(ctx) {
-        const alpha = this.life / this.maxLife;
-        ctx.globalAlpha = alpha; ctx.fillStyle = this.color;
-        ctx.beginPath(); ctx.arc(this.x, this.y, Math.max(0.1, this.size * alpha), 0, Math.PI * 2); ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-      get dead() { return this.life <= 0; }
-    }
+class Ptcl{
+  constructor(x,y,vx,vy,life,color,size=2){Object.assign(this,{x,y,vx,vy,life,maxLife:life,color,size});}
+  update(){this.x+=this.vx;this.y+=this.vy;this.vy+=0.04;this.vx*=.97;this.vy*=.97;this.life--;}
+  draw(ctx){const a=this.life/this.maxLife;ctx.globalAlpha=a*.9;ctx.fillStyle=this.color;ctx.beginPath();ctx.arc(this.x,this.y,Math.max(.1,this.size*a),0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
+  get dead(){return this.life<=0;}
+}
+function burst(P,x,y,c1,c2,n=50){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=Math.random()*5+.5;P.push(new Ptcl(x,y,Math.cos(a)*s,Math.sin(a)*s,Math.random()*35+15,Math.random()>.5?c1:c2,Math.random()*3+.5));}}
+function smk(P,x,y,c='#aaa8'){P.push(new Ptcl(x+(Math.random()-.5)*3,y+(Math.random()-.5)*3,(Math.random()-.5)*.4,-Math.random()*.2,Math.random()*25+10,c,Math.random()*3+1.5));}
 
-    function explode(particles, x, y, c1, c2, count = 60) {
-      for (let i = 0; i < count; i++) {
-        const a = Math.random() * Math.PI * 2, spd = Math.random() * 6 + 1;
-        particles.push(new Particle(x, y, Math.cos(a)*spd, Math.sin(a)*spd,
-          Math.random()*40+20, Math.random()>0.5?c1:c2, Math.random()*3+1));
-      }
+// ── MAP DRAWING ──────────────────────────────────────────────────
+function drawMap(ctx,W,H,ox,oy,zoom){
+  ctx.save();
+  ctx.translate(ox,oy);
+  ctx.scale(zoom,zoom);
+
+  // Deep ocean
+  const og=ctx.createLinearGradient(0,0,W,H);
+  og.addColorStop(0,'#03090f');og.addColorStop(.5,'#040c16');og.addColorStop(1,'#030a14');
+  ctx.fillStyle=og;ctx.fillRect(-W,-H,W*3,H*3);
+
+  // Ocean depth blobs
+  [[W*.1,H*.6,W*.4],[W*.6,H*.3,W*.35],[W*.35,H*.8,W*.45],[W*.8,H*.7,W*.3]].forEach(([cx,cy,r])=>{
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+    g.addColorStop(0,'rgba(0,15,40,0.5)');g.addColorStop(1,'transparent');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+  });
+
+  const land=(pts,shade1='#0e2010',shade2='#0a1a0c')=>{
+    // Shore glow
+    ctx.shadowBlur=20;ctx.shadowColor='rgba(0,50,80,0.25)';
+    ctx.fillStyle='rgba(0,35,70,0.12)';
+    ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p[0],p[1]):ctx.lineTo(p[0],p[1]));
+    ctx.closePath();ctx.fill();ctx.shadowBlur=0;
+    // Land fill
+    const g=ctx.createLinearGradient(pts[0][0],pts[0][1],pts[Math.floor(pts.length/2)][0],pts[Math.floor(pts.length/2)][1]);
+    g.addColorStop(0,shade1);g.addColorStop(1,shade2);
+    ctx.fillStyle=g;
+    ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p[0],p[1]):ctx.lineTo(p[0],p[1]));
+    ctx.closePath();ctx.fill();
+    // Coastline
+    ctx.strokeStyle='rgba(25,80,45,0.55)';ctx.lineWidth=1.2/zoom;
+    ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p[0],p[1]):ctx.lineTo(p[0],p[1]));
+    ctx.closePath();ctx.stroke();
+    // Interior terrain texture
+    for(let i=0;i<5;i++){
+      const tx=pts[0][0]+(Math.random()-.5)*W*.25,ty=pts[0][1]+(Math.random()-.5)*H*.18,tr=W*(.025+Math.random()*.05);
+      const tg=ctx.createRadialGradient(tx,ty,0,tx,ty,tr);
+      tg.addColorStop(0,'rgba(3,10,3,0.55)');tg.addColorStop(1,'transparent');
+      ctx.fillStyle=tg;ctx.beginPath();ctx.arc(tx,ty,tr,0,Math.PI*2);ctx.fill();
     }
-    function smokeTrail(particles, x, y, color='#888888') {
-      particles.push(new Particle(x+(Math.random()-.5)*4, y+(Math.random()-.5)*4,
-        (Math.random()-.5)*.5, -Math.random()*.3, Math.random()*30+20, color, Math.random()*4+2));
-    }
-    function drawGrid(ctx, W, H, color='rgba(0,255,100,0.06)') {
-      ctx.strokeStyle=color; ctx.lineWidth=0.5;
-      for(let x=0;x<=W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-      for(let y=0;y<=H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-    }
-    function drawTerrain(ctx, W, H) {
-      const sky=ctx.createLinearGradient(0,0,0,H*.55);
-      sky.addColorStop(0,'#020810'); sky.addColorStop(1,'#04121e');
-      ctx.fillStyle=sky; ctx.fillRect(0,0,W,H*.55);
-      const gnd=ctx.createLinearGradient(0,H*.55,0,H);
-      gnd.addColorStop(0,'#0d1a08'); gnd.addColorStop(1,'#060d04');
-      ctx.fillStyle=gnd; ctx.fillRect(0,H*.55,W,H*.45);
-      ctx.strokeStyle='rgba(0,255,100,0.15)'; ctx.lineWidth=1;
-      ctx.beginPath(); ctx.moveTo(0,H*.55); ctx.lineTo(W,H*.55); ctx.stroke();
-      ctx.fillStyle='#0a1506'; ctx.beginPath(); ctx.moveTo(0,H*.55);
-      for(let x=0;x<=W;x+=20){const b=Math.sin(x*.03)*18+Math.sin(x*.07)*8; ctx.lineTo(x,H*.55-b);}
-      ctx.lineTo(W,H*.55); ctx.closePath(); ctx.fill();
-    }
-    function drawSea(ctx, W, H, t) {
-      const sea=ctx.createLinearGradient(0,H*.5,0,H);
-      sea.addColorStop(0,'#001830'); sea.addColorStop(1,'#000810');
-      ctx.fillStyle=sea; ctx.fillRect(0,H*.5,W,H*.5);
-      ctx.strokeStyle='rgba(0,100,200,0.3)'; ctx.lineWidth=1;
-      for(let wy=H*.52;wy<H;wy+=18){
-        ctx.beginPath();
-        for(let x=0;x<=W;x+=4){const wv=Math.sin((x+t*2)*.04)*3+Math.sin((x-t)*.07)*1.5; x===0?ctx.moveTo(x,wy+wv):ctx.lineTo(x,wy+wv);}
-        ctx.stroke();
-      }
-    }
-    function drawHUD(ctx, W, H, title, subtitle, color, t) {
-      ctx.fillStyle='rgba(0,0,0,0.03)';
-      for(let y=0;y<H;y+=3) ctx.fillRect(0,y,W,1);
-      ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.fillRect(0,0,W,44);
-      ctx.strokeStyle=color+'60'; ctx.lineWidth=1;
-      ctx.beginPath(); ctx.moveTo(0,44); ctx.lineTo(W,44); ctx.stroke();
-      ctx.fillStyle=color; ctx.font='bold 13px "Courier New"'; ctx.textAlign='left';
-      ctx.fillText('⬛ '+title, 16, 18);
-      ctx.fillStyle=color+'88'; ctx.font='10px "Courier New"';
-      ctx.fillText(subtitle, 16, 34);
-      ctx.textAlign='right'; ctx.fillStyle=color+'66';
-      ctx.fillText('T+'+(t/60).toFixed(1)+'s  //  SIM ACTIVE', W-16, 18);
-      const bs=16; ctx.strokeStyle=color+'44'; ctx.lineWidth=1.5;
-      [[8,52],[W-8,52],[8,H-8],[W-8,H-8]].forEach(([cx,cy],i)=>{
-        const sx=i%2===0?1:-1, sy=i<2?1:-1;
-        ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+sx*bs,cy);
-        ctx.moveTo(cx,cy); ctx.lineTo(cx,cy+sy*bs); ctx.stroke();
-      });
-    }
-    function drawTank(ctx, x, y, color) {
-      ctx.save(); ctx.translate(x,y);
-      ctx.fillStyle=color+'cc'; ctx.fillRect(-16,-6,32,12);
-      ctx.beginPath(); ctx.arc(0,-2,8,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle=color; ctx.fillRect(8,-3,14,3);
-      ctx.fillStyle=color+'88'; ctx.fillRect(-16,6,32,4);
+  };
+
+  // ── Scandinavia ──
+  land([[W*.06,0],[W*.27,0],[W*.30,H*.07],[W*.28,H*.14],[W*.25,H*.20],
+    [W*.28,H*.28],[W*.26,H*.36],[W*.21,H*.41],[W*.17,H*.44],
+    [W*.13,H*.42],[W*.10,H*.36],[W*.08,H*.30],[W*.05,H*.22],[W*.03,H*.13],[W*.06,0]],'#0f2212','#0b1c0e');
+
+  // ── Finland / Karelia ──
+  land([[W*.28,0],[W*.52,0],[W*.54,H*.04],[W*.56,H*.11],
+    [W*.52,H*.17],[W*.49,H*.24],[W*.45,H*.29],[W*.41,H*.27],
+    [W*.37,H*.21],[W*.33,H*.15],[W*.31,H*.09],[W*.29,H*.04],[W*.28,0]],'#102214','#0c1a10');
+
+  // ── Baltic States + Belarus coast ──
+  land([[W*.52,0],[W*.72,0],[W*.74,H*.07],[W*.72,H*.13],
+    [W*.68,H*.19],[W*.64,H*.22],[W*.60,H*.25],[W*.56,H*.27],
+    [W*.53,H*.24],[W*.51,H*.18],[W*.50,H*.12],[W*.51,H*.06],[W*.52,0]],'#0e2010','#0a1a0c');
+
+  // ── Russia east coast ──
+  land([[W*.70,0],[W,0],[W,H*.7],[W*.94,H*.65],[W*.90,H*.58],
+    [W*.86,H*.50],[W*.83,H*.42],[W*.80,H*.34],[W*.76,H*.26],
+    [W*.74,H*.19],[W*.72,H*.13],[W*.72,H*.07],[W*.70,0]],'#0e2010','#091809');
+
+  // ── Central Europe / Poland coast ──
+  land([[W*.04,H*.53],[W*.37,H*.53],[W*.39,H*.57],[W*.37,H*.63],
+    [W*.31,H*.67],[W*.25,H*.69],[W*.19,H*.67],[W*.13,H*.63],
+    [W*.08,H*.58],[W*.05,H*.55],[W*.04,H*.53]],'#0f2112','#0b1c0e');
+
+  // ── Denmark ──
+  land([[W*.22,H*.31],[W*.26,H*.29],[W*.27,H*.35],[W*.25,H*.40],
+    [W*.21,H*.42],[W*.18,H*.38],[W*.20,H*.33],[W*.22,H*.31]]);
+
+  // ── Various islands ──
+  [[W*.18,H*.17,W*.04],[W*.38,H*.34,W*.03],[W*.60,H*.30,W*.025],
+   [W*.08,H*.43,W*.025],[W*.44,H*.44,W*.02],[W*.30,H*.47,W*.018]].forEach(([ix,iy,ir])=>{
+    const pts=Array.from({length:8},(_,i)=>{const a=i/8*Math.PI*2,nr=ir*(.7+Math.random()*.5);return[ix+Math.cos(a)*nr,iy+Math.sin(a)*nr];});
+    land(pts);
+  });
+
+  // Ocean wave lines
+  ctx.strokeStyle='rgba(15,60,120,0.07)';ctx.lineWidth=.7/zoom;
+  [[H*.32,W*.0,W],[H*.42,W*.0,W],[H*.52,W*.0,W],[H*.62,W*.0,W],
+   [H*.18,W*.3,W*.72],[H*.24,W*.15,W*.6]].forEach(([wy,x0,x1])=>{
+    ctx.beginPath();
+    for(let x=x0;x<=x1;x+=5){const v=Math.sin(x*.028)*4+Math.sin(x*.051)*2;x===x0?ctx.moveTo(x,wy+v):ctx.lineTo(x,wy+v);}
+    ctx.stroke();
+  });
+
+  // Tactical grid
+  ctx.strokeStyle='rgba(35,130,170,0.06)';ctx.lineWidth=.4/zoom;
+  for(let x=0;x<=W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<=H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.strokeStyle='rgba(35,130,170,0.13)';ctx.lineWidth=.7/zoom;
+  for(let x=0;x<=W;x+=180){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<=H;y+=180){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Coord labels
+  ctx.fillStyle='rgba(40,155,195,0.28)';ctx.font=`${8/zoom}px 'Courier New'`;ctx.textBaseline='top';ctx.textAlign='left';
+  for(let gx=0;gx<=W;gx+=180)for(let gy=0;gy<=H;gy+=180){
+    ctx.fillText(`${(62-gy/12).toFixed(0)}N`+` ${(8+gx/18).toFixed(0)}E`,gx+3/zoom,gy+2/zoom);
+  }
+
+  // City markers
+  [[W*.225,H*.375,'Stockholm'],[W*.42,H*.455,'Helsinki'],[W*.555,H*.495,'Tallinn'],
+   [W*.60,H*.555,'Riga'],[W*.625,H*.615,'Vilnius'],[W*.745,H*.60,'Kaliningrad'],
+   [W*.165,H*.615,'Copenhagen'],[W*.295,H*.62,'Gdańsk'],[W*.485,H*.505,'Turku']].forEach(([cx,cy,n])=>{
+    ctx.fillStyle='rgba(80,200,140,0.55)';ctx.beginPath();ctx.arc(cx,cy,2.5/zoom,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(80,200,140,0.4)';ctx.font=`${7.5/zoom}px 'Courier New'`;ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(n,cx,cy-5/zoom);
+  });
+
+  ctx.restore();
+}
+
+// ── ON-MAP SIMULATIONS ────────────────────────────────────────────
+function runSim(type,ctx,st,t,x,y,color){
+  if(!st.P) st.P=[];
+  const P=st.P;
+  let done=false;
+
+  if(type==='ballistic'){
+    const dur=200,prog=Math.min(t/dur,1);
+    if(!st.tx){const d=Math.random()>.5?1:-1;st.tx=x+d*(200+Math.random()*80);st.ty=y+(Math.random()*50-25);}
+    const mx=x+(st.tx-x)*prog,arc=-Math.sin(prog*Math.PI)*150;
+    const my=y+(st.ty-y)*prog+arc;
+    if(t%2===0&&prog<.94){smk(P,mx,my,'#ff6500cc');smk(P,mx,my,'#ffaa0055');}
+    P.forEach(p=>p.update());P.forEach(p=>p.draw(ctx));st.P=P.filter(p=>!p.dead);
+    if(prog>.96&&!st.ex){st.ex=true;burst(P,st.tx,st.ty,'#ff4400','#ffcc00',70);burst(P,st.tx,st.ty,'#fff','#ff8800',30);}
+    if(prog<.94){
+      const pp=Math.max(0,prog-.01);
+      const pmx=x+(st.tx-x)*pp,pmy=y+(st.ty-y)*pp-Math.sin(pp*Math.PI)*150;
+      ctx.save();ctx.translate(mx,my);ctx.rotate(Math.atan2(my-pmy,mx-pmx));
+      const eg=ctx.createRadialGradient(-10,0,0,-10,0,12);eg.addColorStop(0,'#ff8800bb');eg.addColorStop(1,'transparent');
+      ctx.fillStyle=eg;ctx.beginPath();ctx.arc(-10,0,12,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-6,-3);ctx.lineTo(-6,3);ctx.closePath();ctx.fill();
+      ctx.fillStyle=color+'aa';ctx.beginPath();ctx.moveTo(-5,0);ctx.lineTo(-11,-5);ctx.lineTo(-11,5);ctx.closePath();ctx.fill();
       ctx.restore();
     }
-    function drawAircraft(ctx, x, y, angle, color, label) {
-      ctx.save(); ctx.translate(x,y); ctx.rotate(angle);
-      ctx.shadowBlur=6; ctx.shadowColor=color; ctx.fillStyle=color;
-      ctx.beginPath(); ctx.moveTo(18,0); ctx.lineTo(-12,-3); ctx.lineTo(-16,0); ctx.lineTo(-12,3); ctx.closePath(); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(4,0); ctx.lineTo(-6,-18); ctx.lineTo(-10,0); ctx.closePath(); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(4,0); ctx.lineTo(-6,18); ctx.lineTo(-10,0); ctx.closePath(); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(-10,0); ctx.lineTo(-16,-8); ctx.lineTo(-14,0); ctx.closePath(); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(-10,0); ctx.lineTo(-16,8); ctx.lineTo(-14,0); ctx.closePath(); ctx.fill();
-      ctx.shadowBlur=0; ctx.restore();
-      ctx.fillStyle=color+'88'; ctx.font='8px "Courier New"'; ctx.textAlign='center';
-      ctx.fillText(label, x, y-22);
-    }
-    function drawShip(ctx, x, y, color, label) {
-      ctx.fillStyle=color+'cc';
-      ctx.beginPath(); ctx.moveTo(x-50,y+8); ctx.lineTo(x+50,y+8); ctx.lineTo(x+60,y+18); ctx.lineTo(x-60,y+18); ctx.closePath(); ctx.fill();
-      ctx.fillRect(x-20,y-10,40,18); ctx.fillRect(x-8,y-22,16,12);
-      ctx.strokeStyle=color; ctx.lineWidth=1.5;
-      ctx.beginPath(); ctx.moveTo(x,y-22); ctx.lineTo(x,y-38); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x-12,y-32); ctx.lineTo(x+12,y-32); ctx.stroke();
-      ctx.fillStyle=color+'88'; ctx.font='8px "Courier New"'; ctx.textAlign='center';
-      ctx.fillText(label, x, y-44);
-    }
+    ctx.setLineDash([4,6]);ctx.strokeStyle=color+'25';ctx.lineWidth=1;ctx.beginPath();
+    for(let p=0;p<=1;p+=.02){const px=x+(st.tx-x)*p,py=y+(st.ty-y)*p-Math.sin(p*Math.PI)*150;p===0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
+    ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=color;ctx.font="bold 9px 'Courier New'";ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(`ALT ${Math.round(Math.max(0,Math.sin(prog*Math.PI))*90)}km  ${Math.round(prog*480)}km`,x,y-16);
+    if(prog>=1&&P.length===0) done=true;
+  }
 
-    // ── Sim renderers ──────────────────────────────────────────
-    function simBallisticMissile(ctx, state, t, color, W, H) {
-      drawTerrain(ctx,W,H); drawGrid(ctx,W,H);
-      const {particles}=state, dur=300, prog=t/dur;
-      const lx=80,ly=H*.72,ix=W-80,iy=H*.72,ay=H*.08;
-      const mx=lx+(ix-lx)*prog;
-      const my=ly+(ay-ly)*Math.sin(prog*Math.PI)*-1+(iy-ly)*prog-Math.sin(prog*Math.PI)*(ly-ay);
-      if(t%2===0&&prog<.95){smokeTrail(particles,mx,my,'#ff6600aa'); particles.push(new Particle(mx,my,(Math.random()-.5)*2,Math.random()*2,20,'#ffffff44',1.5));}
-      particles.forEach(p=>p.update()); particles.forEach(p=>p.draw(ctx)); state.particles=particles.filter(p=>!p.dead);
-      if(prog>.97&&!state.exploded){state.exploded=true; explode(particles,ix,iy,'#ff4400','#ffaa00',80); explode(particles,ix,iy,'#ffffff','#ff8800',40);}
-      if(prog<.97){
-        const pp=Math.max(0,prog-.01);
-        const pmx=lx+(ix-lx)*pp, pmy=ly+(ay-ly)*Math.sin(pp*Math.PI)*-1+(iy-ly)*pp-Math.sin(pp*Math.PI)*(ly-ay);
-        const angle=Math.atan2(my-pmy,mx-pmx);
-        ctx.save(); ctx.translate(mx,my); ctx.rotate(angle);
-        const eg=ctx.createRadialGradient(-12,0,0,-12,0,14);
-        eg.addColorStop(0,'#ff8800cc'); eg.addColorStop(1,'transparent');
-        ctx.fillStyle=eg; ctx.beginPath(); ctx.arc(-12,0,14,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(-10,-4); ctx.lineTo(-10,4); ctx.closePath(); ctx.fill();
-        ctx.fillStyle=color+'aa';
-        ctx.beginPath(); ctx.moveTo(-8,0); ctx.lineTo(-14,-8); ctx.lineTo(-10,0); ctx.closePath(); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(-8,0); ctx.lineTo(-14,8); ctx.lineTo(-10,0); ctx.closePath(); ctx.fill();
-        ctx.restore();
+  else if(type==='cruise'){
+    if(!st.path){st.path=[];const dir=Math.random()>.5?1:-1;for(let i=0;i<=100;i++){st.path.push([x+dir*(250*(i/100)),y+Math.sin(i*.1)*25+Math.sin(i*.19)*10]);}}
+    const dur=180,prog=Math.min(t/dur,1),idx=Math.floor(prog*(st.path.length-1));
+    const [mx,my]=st.path[Math.min(idx,st.path.length-1)];
+    if(t%2===0&&prog<.97){smk(P,mx,my,'#aaa6');smk(P,mx,my,'#ff880055');}
+    P.forEach(p=>p.update());P.forEach(p=>p.draw(ctx));st.P=P.filter(p=>!p.dead);
+    if(prog>.96&&!st.ex){st.ex=true;burst(P,mx,my,'#ff4400','#ffcc00',80);}
+    ctx.setLineDash([3,5]);ctx.strokeStyle=color+'1a';ctx.lineWidth=1;ctx.beginPath();
+    st.path.forEach(([px,py],i)=>i===0?ctx.moveTo(px,py):ctx.lineTo(px,py));ctx.stroke();ctx.setLineDash([]);
+    if(prog<.96){const next=st.path[Math.min(idx+1,st.path.length-1)];
+      ctx.save();ctx.translate(mx,my);ctx.rotate(Math.atan2(next[1]-my,next[0]-mx));
+      ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-6,-3);ctx.lineTo(-6,3);ctx.closePath();ctx.fill();
+      ctx.fillStyle=color+'bb';ctx.beginPath();ctx.moveTo(2,0);ctx.lineTo(-3,-8);ctx.lineTo(-5,0);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(2,0);ctx.lineTo(-3,8);ctx.lineTo(-5,0);ctx.closePath();ctx.fill();ctx.restore();}
+    ctx.fillStyle=color;ctx.font="bold 9px 'Courier New'";ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(`NOE ${Math.round(40+Math.sin(t*.08)*12)}m  ${Math.round(prog*100)}%`,x,y-16);
+    if(prog>=1&&P.length===0) done=true;
+  }
+
+  else if(type==='sam'){
+    const dur=160,p=t/dur;
+    if(!st.tx){const d=Math.random()>.5?1:-1;st.tx=x+d*(160+Math.random()*60);st.ty=y-150;}
+    const tx=st.tx+(x-st.tx)*Math.min(p*1.8,1),ty=st.ty+(y-st.ty)*Math.min(p*1.8,1);
+    const samP=Math.max(0,Math.min(1,(t-35)/70));
+    const ix=st.tx+(x-st.tx)*.52,iy=st.ty+(y-st.ty)*.52;
+    const sx=x+(ix-x)*samP,sy=y+(iy-y)*samP;
+    if(t%3===0&&p<.88) smk(P,tx,ty,'#ff333388');
+    if(t>35&&samP<.97) smk(P,sx,sy,'#00ccffaa');
+    P.forEach(p2=>p2.update());P.forEach(p2=>p2.draw(ctx));st.P=P.filter(p2=>!p2.dead);
+    const hit=samP>.95;if(hit&&!st.ex){st.ex=true;burst(P,ix,iy,'#fff','#ffcc00',60);}
+    // Radar sweep rings
+    const sw=(t*2.5)%360*Math.PI/180;
+    ctx.save();ctx.translate(x,y);
+    for(let i=0;i<20;i++){const a=sw-i*.06;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,85,a-.06,a);ctx.closePath();ctx.fillStyle=color+Math.floor((20-i)*5).toString(16).padStart(2,'0');ctx.fill();}
+    [38,75].forEach(r=>{ctx.strokeStyle=color+'1a';ctx.lineWidth=.6;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();});
+    ctx.restore();
+    if(!hit){ctx.fillStyle='#ff3333';ctx.shadowBlur=6;ctx.shadowColor='#ff3333';ctx.beginPath();ctx.arc(tx,ty,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+    if(t>35&&samP<.96){ctx.fillStyle=color;ctx.shadowBlur=8;ctx.shadowColor=color;ctx.beginPath();ctx.arc(sx,sy,3,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+    ctx.fillStyle=color;ctx.font="bold 9px 'Courier New'";ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(st.ex?'✓ INTERCEPT CONFIRMED':'TRACKING INBOUND',x,y-16);
+    if(hit&&P.length===0) done=true;
+  }
+
+  else if(type==='radar'){
+    const sw=(t*1.8)%360*Math.PI/180;
+    if(!st.blips) st.blips=[{a:.4,d:.58},{a:1.9,d:.44},{a:3.1,d:.7},{a:4.7,d:.5},{a:5.5,d:.35}].map(b=>({...b,age:0}));
+    ctx.save();ctx.translate(x,y);
+    [45,95,145].forEach(r=>{ctx.strokeStyle=color+'18';ctx.lineWidth=.7;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();});
+    ctx.strokeStyle=color+'0d';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(0,-160);ctx.lineTo(0,160);ctx.stroke();ctx.beginPath();ctx.moveTo(-160,0);ctx.lineTo(160,0);ctx.stroke();
+    for(let i=0;i<25;i++){const a=sw-i*.055;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,145,a-.055,a);ctx.closePath();ctx.fillStyle=color+Math.floor((25-i)*4).toString(16).padStart(2,'0');ctx.fill();}
+    ctx.strokeStyle=color+'cc';ctx.lineWidth=1.5;ctx.shadowBlur=6;ctx.shadowColor=color;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(sw)*145,Math.sin(sw)*145);ctx.stroke();ctx.shadowBlur=0;
+    st.blips.forEach(b=>{const diff=((sw-b.a)*180/Math.PI+360)%360;if(diff<8) b.age=55;
+      if(b.age>0){b.age--;const al=b.age/55,bx=Math.cos(b.a)*145*b.d,by=Math.sin(b.a)*145*b.d;
+        ctx.globalAlpha=al;ctx.fillStyle='#ff3333';ctx.shadowBlur=8;ctx.shadowColor='#ff3333';
+        ctx.beginPath();ctx.arc(bx,by,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.globalAlpha=1;}});
+    ctx.fillStyle=color;ctx.shadowBlur=10;ctx.shadowColor=color;ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.restore();
+    const ac=st.blips.filter(b=>b.age>0).length;
+    ctx.fillStyle=color;ctx.font="bold 9px 'Courier New'";ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(`CONTACTS: ${ac}  ${Math.round((sw*180/Math.PI+360)%360)}°`,x,y-16);
+    // radar loops
+  }
+
+  else if(type==='dogfight'){
+    if(!st.stars) st.stars=Array.from({length:25},()=>({x:x+(Math.random()-.5)*350,y:y+(Math.random()-.5)*280,r:Math.random()*1.1}));
+    st.stars.forEach(s=>{ctx.fillStyle=`rgba(200,220,255,${.18+Math.sin(t*.06+s.r*8)*.12})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();});
+    const fx=x+Math.sin(t*.04)*110+Math.cos(t*.026)*55,fy=y+Math.cos(t*.05)*75+Math.sin(t*.031)*38;
+    const ex=x-Math.sin(t*.038)*95+Math.cos(t*.029)*48,ey=y-Math.cos(t*.047)*68+Math.sin(t*.034)*33;
+    if(t%3===0){smk(P,fx,fy,'#fff2');if(!st.kill) smk(P,ex,ey,'#ff220022');}
+    if(!st.fired&&t>80){st.fired=true;st.mx=fx;st.my=fy;}
+    if(st.fired&&!st.kill){const mp=Math.min(1,(t-80)/55);st.mx=fx+(ex-fx)*mp;st.my=fy+(ey-fy)*mp;smk(P,st.mx,st.my,'#00ccff77');if(mp>.94){st.kill=true;burst(P,st.mx,st.my,'#ff4400','#ffcc00',70);}if(!st.kill){ctx.fillStyle='#00ccff';ctx.shadowBlur=5;ctx.shadowColor='#00ccff';ctx.beginPath();ctx.arc(st.mx,st.my,3,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}}
+    P.forEach(p=>p.update());P.forEach(p=>p.draw(ctx));st.P=P.filter(p=>!p.dead);
+    [[fx,fy,color,'FRDLY'],[!st.kill?ex:null,!st.kill?ey:null,'#ff3333','HSTL']].forEach(([px,py,pc,lbl])=>{
+      if(px==null) return;
+      ctx.save();ctx.translate(px,py);const ang=Math.atan2(py-y,px-x);ctx.rotate(ang);
+      ctx.shadowBlur=5;ctx.shadowColor=pc;ctx.fillStyle=pc;
+      ctx.beginPath();ctx.moveTo(11,0);ctx.lineTo(-7,-2.5);ctx.lineTo(-9,0);ctx.lineTo(-7,2.5);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(2,0);ctx.lineTo(-4,-11);ctx.lineTo(-7,0);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(2,0);ctx.lineTo(-4,11);ctx.lineTo(-7,0);ctx.closePath();ctx.fill();
+      ctx.shadowBlur=0;ctx.restore();
+      ctx.fillStyle=pc+'aa';ctx.font="8px 'Courier New'";ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(lbl,px,py-14);
+    });
+    ctx.fillStyle=color;ctx.font="bold 9px 'Courier New'";ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(st.kill?'✓ FOX-3 SPLASH':t>80?'FOX-3 AWAY':'RADAR LOCK',x,y-16);
+    if(st.kill&&P.length===0) done=true;
+  }
+
+  else if(type==='naval'){
+    if(!st.tx){const d=Math.random()>.5?1:-1;st.tx=x+d*(220+Math.random()*60);st.ty=y+(Math.random()*60-30);}
+    const ds=(sx,sy,sc)=>{ctx.fillStyle=sc+'bb';ctx.beginPath();ctx.moveTo(sx-32,sy+5);ctx.lineTo(sx+32,sy+5);ctx.lineTo(sx+38,sy+12);ctx.lineTo(sx-38,sy+12);ctx.closePath();ctx.fill();ctx.fillRect(sx-13,sy-7,26,12);ctx.fillRect(sx-5,sy-16,10,9);ctx.strokeStyle=sc;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(sx,sy-16);ctx.lineTo(sx,sy-28);ctx.stroke();ctx.beginPath();ctx.moveTo(sx-9,sy-23);ctx.lineTo(sx+9,sy-23);ctx.stroke();};
+    ds(x,y,color);if(!st.kill) ds(st.tx,st.ty,'#ff3333');
+    if(!st.salvo) st.salvo=[];
+    [55,70,85].forEach((lt,i)=>{if(t===lt){st.salvo.push({launched:lt,id:i,hit:false});}});
+    st.salvo.forEach(m=>{const mp=Math.min(1,(t-m.launched)/90);m.cx=x+(st.tx-x)*mp;m.cy=y+(st.ty-y)*mp-Math.sin(mp*Math.PI)*55;if(mp>.96&&!m.hit){m.hit=true;burst(P,st.tx,st.ty,'#ff4400','#ffcc00',55);if(m.id===2) st.kill=true;}if(!m.hit){smk(P,m.cx,m.cy,'#aaa5');ctx.fillStyle=color;ctx.shadowBlur=4;ctx.shadowColor=color;ctx.beginPath();ctx.arc(m.cx,m.cy,3,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}});
+    P.forEach(p=>p.update());P.forEach(p=>p.draw(ctx));st.P=P.filter(p=>!p.dead);
+    ctx.fillStyle=color;ctx.font="bold 9px 'Courier New'";ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(`SALVO ${st.salvo.filter(m=>m.hit).length}/3  ${st.kill?'✓ TARGET HIT':'TRACKING'}`,x,y-36);
+    if(st.kill&&P.length===0) done=true;
+  }
+
+  else if(type==='stealth'){
+    if(!st.radars) st.radars=[{ox:x+140,oy:y+55,sw:0,spd:1.4},{ox:x+250,oy:y-35,sw:110,spd:-.95}];
+    st.radars.forEach(r=>{r.sw=(r.sw+r.spd)%360;const a=r.sw*Math.PI/180;ctx.save();ctx.translate(r.ox,r.oy);ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,75,a-.38,a);ctx.closePath();ctx.fillStyle='#ff333312';ctx.fill();ctx.strokeStyle='#ff333328';ctx.lineWidth=1;ctx.stroke();[38,75].forEach(rr=>{ctx.strokeStyle='#ff333315';ctx.lineWidth=.5;ctx.beginPath();ctx.arc(0,0,rr,0,Math.PI*2);ctx.stroke();});ctx.restore();ctx.fillStyle='#ff3333aa';ctx.fillRect(r.ox-3,r.oy-8,6,8);});
+    const dur=190,p=Math.min(t/dur,1);
+    const wpts=[[x,y],[x+75,y-28],[x+145,y-45],[x+215,y-18],[x+290,y+18],[x+345,y+8]];
+    const si=Math.min(wpts.length-2,Math.floor(p*(wpts.length-1)));const sp=(p*(wpts.length-1))-si;
+    const [fx,fy]=wpts[si],to=wpts[Math.min(si+1,wpts.length-1)];
+    const mx=fx+(to[0]-fx)*sp,my=fy+(to[1]-fy)*sp;
+    if(t%5===0&&p<.94) P.push(new Ptcl(mx,my,0,0,7,color+'2a',1.2));
+    P.forEach(pp=>pp.update());P.forEach(pp=>pp.draw(ctx));st.P=P.filter(pp=>!pp.dead);
+    if(p>.88&&!st.ex){st.ex=true;burst(P,wpts[wpts.length-1][0],wpts[wpts.length-1][1],'#ff4400','#ffcc00',80);}
+    ctx.setLineDash([2,8]);ctx.strokeStyle=color+'12';ctx.lineWidth=1;ctx.beginPath();wpts.forEach(([px,py],i)=>i===0?ctx.moveTo(px,py):ctx.lineTo(px,py));ctx.stroke();ctx.setLineDash([]);
+    if(p<.94){const ang=Math.atan2(to[1]-fy,to[0]-fx);ctx.save();ctx.translate(mx,my);ctx.rotate(ang);ctx.fillStyle=color+'ee';ctx.shadowBlur=2;ctx.shadowColor=color;ctx.beginPath();ctx.moveTo(12,0);ctx.lineTo(-8,-13);ctx.lineTo(-10,0);ctx.lineTo(-8,13);ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.restore();}
+    ctx.fillStyle=color;ctx.font="bold 9px 'Courier New'";ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(`RCS <0.001m²  ${st.ex?'✓ TARGET DESTROYED':'UNDETECTED'}`,x,y-16);
+    if(st.ex&&P.length===0) done=true;
+  }
+
+  else if(type==='antiship'){
+    if(!st.tx){const d=Math.random()>.5?1:-1;st.tx=x+d*(260+Math.random()*60);st.ty=y+(Math.random()*40-20);}
+    const dur=190,p=Math.min(t/dur,1);
+    const mx=x+(st.tx-x)*p,popUp=p>.7?Math.sin((p-.7)/.3*Math.PI)*35:0,my=y+(st.ty-y)*p-popUp;
+    if(t%2===0&&p<.95){smk(P,mx,my,'#aaa4');smk(P,mx,my,'#ff880033');}
+    P.forEach(pp=>pp.update());P.forEach(pp=>pp.draw(ctx));st.P=P.filter(pp=>!pp.dead);
+    if(p>.94&&!st.ex){st.ex=true;burst(P,st.tx,st.ty,'#ff4400','#ffcc00',85);}
+    if(!st.ex){ctx.fillStyle='#ff3333aa';ctx.fillRect(st.tx-30,st.ty,60,12);ctx.fillRect(st.tx-22,st.ty-9,44,9);ctx.fillStyle='#ff3333';ctx.fillRect(st.tx-5,st.ty-17,10,8);}
+    if(p<.94){ctx.fillStyle=color;ctx.shadowBlur=8;ctx.shadowColor=color;ctx.beginPath();ctx.arc(mx,my,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle=color+'25';ctx.lineWidth=.7;ctx.setLineDash([2,4]);ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(mx,st.ty);ctx.stroke();ctx.setLineDash([]);}
+    ctx.fillStyle=color;ctx.font="bold 9px 'Courier New'";ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(`SEA-SKIM ${Math.max(5,Math.round(15-p*12))}m  ${st.ex?'✓ DIRECT HIT':'TERMINAL'}`,x,y-16);
+    if(st.ex&&P.length===0) done=true;
+  }
+
+  else if(type==='helicopter'){
+    const ra=t*.26;
+    ctx.save();ctx.translate(x,y-14);ctx.strokeStyle=color+'cc';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(Math.cos(ra)*24,Math.sin(ra)*7);ctx.lineTo(Math.cos(ra+Math.PI)*24,Math.sin(ra+Math.PI)*7);ctx.stroke();ctx.restore();
+    ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,17,8,0,0,Math.PI*2);ctx.fill();
+    ctx.fillRect(x+15,y-2,14,3);ctx.fillStyle=color+'88';ctx.beginPath();ctx.arc(x-5,y-5,5,0,Math.PI*2);ctx.fill();
+    if(t%2===0) P.push(new Ptcl(x+(Math.random()-.5)*28,y+8,(Math.random()-.5)*2,Math.random()*.7,14,'#8B735555',2.2));
+    if(!st.tgts) st.tgts=[{x:x+130,y:y+18,alive:true},{x:x+185,y:y+8,alive:true},{x:x+155,y:y+45,alive:true}];
+    [55,105,155].forEach((ft,i)=>{
+      if(t===ft) st['m'+i]={x,y,hit:false};
+      const m=st['m'+i];if(!m) return;
+      if(!m.hit){const mp=Math.min(1,(t-ft)/42);m.x=x+(st.tgts[i].x-x)*mp;m.y=y+(st.tgts[i].y-y)*mp;smk(P,m.x,m.y,'#ff880066');if(mp>.93&&st.tgts[i].alive){m.hit=true;st.tgts[i].alive=false;burst(P,st.tgts[i].x,st.tgts[i].y,'#ff4400','#ffcc00',50);}if(!m.hit){ctx.fillStyle=color;ctx.beginPath();ctx.arc(m.x,m.y,2.5,0,Math.PI*2);ctx.fill();}}
+    });
+    st.tgts.forEach(tg=>{if(tg.alive){ctx.fillStyle='#ff3333aa';ctx.fillRect(tg.x-9,tg.y-4,18,8);ctx.fillRect(tg.x-3,tg.y-9,6,5);}});
+    P.forEach(p=>p.update());P.forEach(p=>p.draw(ctx));st.P=P.filter(p=>!p.dead);
+    const kl=st.tgts.filter(tg=>!tg.alive).length;
+    ctx.fillStyle=color;ctx.font="bold 9px 'Courier New'";ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(`ATGM ${[55,105,155].filter(ft=>t>ft).length}/3  K:${kl}/3`,x,y-22);
+    if(kl===3&&P.length===0) done=true;
+  }
+
+  else if(type==='armor'){
+    if(!st.units) st.units=Array.from({length:4},(_,i)=>({x:x+i*16-24,y:y+(i-1.5)*11,off:i*.7}));
+    st.units.forEach((u,i)=>{u.x=Math.min(x+240,u.x+.85+Math.sin(t*.06+u.off)*.25);u.y=y+(i-1.5)*11+Math.sin(t*.04+u.off)*4;if(t%3===0) P.push(new Ptcl(u.x-10,u.y+5,(Math.random()-.5)*1.3,Math.random()*.45,18,'#8B735555',2));
+      ctx.save();ctx.translate(u.x,u.y);ctx.fillStyle=color+'cc';ctx.fillRect(-11,-5,22,10);ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,-1,5,0,Math.PI*2);ctx.fill();ctx.fillRect(5,-1.5,9,3);ctx.fillStyle=color+'88';ctx.fillRect(-11,5,22,3);ctx.restore();});
+    if(!st.enemies) st.enemies=[{x:x+165,y:y-9,alive:true},{x:x+205,y:y+9,alive:true},{x:x+185,y:y+32,alive:true}];
+    st.enemies.forEach(e=>{const n=st.units[st.units.length-1];if(n.x>e.x-55&&e.alive){e.alive=false;burst(P,e.x,e.y,'#ff4400','#ffcc00',40);}if(e.alive){ctx.save();ctx.translate(e.x,e.y);ctx.fillStyle='#ff3333cc';ctx.fillRect(-11,-5,22,10);ctx.beginPath();ctx.arc(0,-1,5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ff3333';ctx.fillRect(5,-1.5,9,3);ctx.restore();}});
+    if(t%42===0&&st.units[st.units.length-1].x<x+185) burst(P,st.units[0].x+12,st.units[0].y,'#ffff00','#ff8800',10);
+    P.forEach(p=>p.update());P.forEach(p=>p.draw(ctx));st.P=P.filter(p=>!p.dead);
+    ctx.fillStyle=color;ctx.font="bold 9px 'Courier New'";ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(`ADV ${Math.min(100,Math.round((st.units[0].x-x)/2.4))}%  K:${st.enemies.filter(e=>!e.alive).length}/3`,x,y-20);
+    if(st.enemies.filter(e=>!e.alive).length===3&&P.length===0) done=true;
+  }
+
+  return done;
+}
+
+// ── APP ──────────────────────────────────────────────────────────
+function App(){
+  const cvs=useRef(null);
+  const raf=useRef(null);
+  const [units,setUnits]=useState([]);
+  const [selCtry,setSelCtry]=useState('russia');
+  const [selCat,setSelCat]=useState('aircraft');
+  const [placing,setPlacing]=useState(null);
+  const [selUnit,setSelUnit]=useState(null);
+  const [dragging,setDragging]=useState(null);
+  const [pan,setPan]=useState({x:0,y:0});
+  const [zoom,setZoom]=useState(1);
+  const [panning,setPanning]=useState(false);
+  const [lastP,setLastP]=useState(null);
+  const [briefing,setBriefing]=useState(false);
+  const [scenario,setScenario]=useState('Baltic Sea Theater');
+  const [activeSim,setActiveSim]=useState(null);
+
+  const W=900,H=620;
+  const unitsR=useRef(units);
+  const selR=useRef(selUnit);
+  const placingR=useRef(placing);
+  const selCtryR=useRef(selCtry);
+  const simR=useRef(activeSim);
+  useEffect(()=>{unitsR.current=units;},[units]);
+  useEffect(()=>{selR.current=selUnit;},[selUnit]);
+  useEffect(()=>{placingR.current=placing;},[placing]);
+  useEffect(()=>{selCtryR.current=selCtry;},[selCtry]);
+  useEffect(()=>{simR.current=activeSim;},[activeSim]);
+
+  const render=useCallback(()=>{
+    const canvas=cvs.current;if(!canvas) return;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    // Base map
+    drawMap(ctx,W,H,pan.x,pan.y,zoom);
+
+    ctx.save();
+    ctx.translate(pan.x,pan.y);
+    ctx.scale(zoom,zoom);
+
+    const us=unitsR.current;
+    const su=selR.current;
+    const sim=simR.current;
+
+    // Range rings
+    if(su){const u=us.find(u=>u.id===su);if(u){[55,115,200].forEach((r,i)=>{ctx.strokeStyle=TC[u.threat]+['33','22','14'][i];ctx.lineWidth=.8/zoom;ctx.setLineDash([3/zoom,4/zoom]);ctx.beginPath();ctx.arc(u.x,u.y,r,0,Math.PI*2);ctx.stroke();});ctx.setLineDash([]);}}
+
+    // Active sim
+    if(sim){
+      const u=us.find(u=>u.id===sim.unitId);
+      if(u){
+        // Area glow
+        const bg=ctx.createRadialGradient(u.x,u.y,15,u.x,u.y,180);
+        bg.addColorStop(0,sim.color+'14');bg.addColorStop(1,'transparent');
+        ctx.fillStyle=bg;ctx.beginPath();ctx.arc(u.x,u.y,180,0,Math.PI*2);ctx.fill();
+        const done=runSim(sim.type,ctx,sim.state,sim.t,u.x,u.y,sim.color);
+        sim.t++;
+        if(done&&sim.type!=='radar'){sim.t=0;Object.keys(sim.state).forEach(k=>{if(k!=='P') delete sim.state[k];});sim.state.P=[];}
       }
-      ctx.strokeStyle=color+'20'; ctx.lineWidth=1; ctx.setLineDash([4,6]); ctx.beginPath();
-      for(let p=0;p<=1;p+=.01){const px=lx+(ix-lx)*p, py=ly+(ay-ly)*Math.sin(p*Math.PI)*-1+(iy-ly)*p-Math.sin(p*Math.PI)*(ly-ay); p===0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
-      ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle=color+'88'; ctx.fillRect(lx-6,ly,12,10);
-      ctx.fillStyle=color+'44'; ctx.font='9px "Courier New"'; ctx.textAlign='center';
-      ctx.fillText('RANGE: '+Math.round(prog*480)+'km / 480km', W/2, H-16);
-      ctx.fillStyle=color+'88'; ctx.textAlign='right';
-      ctx.fillText('ALT: '+Math.round(Math.max(0,Math.sin(prog*Math.PI))*120)+'km', W-20, H-16);
-      return t>=dur+60;
     }
 
-    function simCruiseMissile(ctx, state, t, color, W, H) {
-      drawTerrain(ctx,W,H); drawGrid(ctx,W,H);
-      const {particles}=state;
-      if(!state.path){state.path=[]; const ty=H*.52; for(let i=0;i<=200;i++){const x=60+(W-120)*(i/200); state.path.push({x,y:ty-40-Math.sin(i*.15)*18-Math.sin(i*.37)*10});}}
-      const dur=280, prog=Math.min(t/dur,1), idx=Math.floor(prog*(state.path.length-1));
-      const pos=state.path[Math.min(idx,state.path.length-1)];
-      if(t%2===0&&prog<.97){smokeTrail(particles,pos.x,pos.y,'#aaaaaa66'); particles.push(new Particle(pos.x,pos.y,-1.5,(Math.random()-.5),15,'#ff8800aa',2));}
-      particles.forEach(p=>p.update()); particles.forEach(p=>p.draw(ctx)); state.particles=particles.filter(p=>!p.dead);
-      if(prog>.97&&!state.exploded){state.exploded=true; explode(particles,pos.x,pos.y,'#ff4400','#ffcc00',100);}
-      ctx.strokeStyle=color+'18'; ctx.lineWidth=1; ctx.setLineDash([3,5]); ctx.beginPath();
-      state.path.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke(); ctx.setLineDash([]);
-      if(prog<.97){
-        const next=state.path[Math.min(idx+1,state.path.length-1)];
-        const angle=Math.atan2(next.y-pos.y,next.x-pos.x);
-        ctx.save(); ctx.translate(pos.x,pos.y); ctx.rotate(angle);
-        const eg=ctx.createRadialGradient(-10,0,0,-10,0,10);
-        eg.addColorStop(0,'#ff8800bb'); eg.addColorStop(1,'transparent');
-        ctx.fillStyle=eg; ctx.beginPath(); ctx.arc(-10,0,10,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(12,0); ctx.lineTo(-8,-3); ctx.lineTo(-8,3); ctx.closePath(); ctx.fill();
-        ctx.fillStyle=color+'cc';
-        ctx.beginPath(); ctx.moveTo(2,0); ctx.lineTo(-3,-10); ctx.lineTo(-6,0); ctx.closePath(); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(2,0); ctx.lineTo(-3,10); ctx.lineTo(-6,0); ctx.closePath(); ctx.fill();
-        ctx.restore();
+    // Units
+    us.forEach(unit=>{
+      const isSel=unit.id===su;
+      const cc=COUNTRIES[unit.country].color;
+      const tc=TC[unit.threat];
+      const r=isSel?13:9;
+      ctx.shadowBlur=isSel?16:7;ctx.shadowColor=cc;
+      // Hex marker
+      ctx.strokeStyle=isSel?'#fff':tc;ctx.lineWidth=(isSel?2:1.2)/zoom;
+      ctx.fillStyle=isSel?cc:cc+'cc';
+      ctx.beginPath();
+      for(let i=0;i<6;i++){const a=i*Math.PI/3-Math.PI/6;ctx.lineTo(unit.x+r*Math.cos(a)/zoom*zoom,unit.y+r*Math.sin(a)/zoom*zoom);}
+      ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.shadowBlur=0;
+      // Icon
+      ctx.fillStyle='#fff';ctx.font=`bold ${(isSel?9:8)/zoom*zoom}px 'Courier New'`;
+      ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(unit.sym,unit.x,unit.y);
+      // Threat dot
+      ctx.fillStyle=tc;ctx.shadowBlur=4;ctx.shadowColor=tc;
+      ctx.beginPath();ctx.arc(unit.x+r*.72,unit.y-r*.72,2.2,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+      // Label
+      if(zoom>0.55){
+        ctx.font=`bold ${8/zoom}px 'Courier New'`;
+        const lw=ctx.measureText(unit.name).width;
+        ctx.fillStyle='rgba(2,5,10,0.85)';ctx.fillRect(unit.x+r+3/zoom,unit.y-6/zoom,lw+5/zoom,12/zoom);
+        ctx.strokeStyle=cc+'44';ctx.lineWidth=.4/zoom;ctx.strokeRect(unit.x+r+3/zoom,unit.y-6/zoom,lw+5/zoom,12/zoom);
+        ctx.fillStyle=cc;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(unit.name,unit.x+r+5/zoom,unit.y-5/zoom);
       }
-      ctx.fillStyle='#1a1a1a'; ctx.fillRect(W-90,H*.52-28,22,28); ctx.fillRect(W-110,H*.52-18,16,18);
-      ctx.strokeStyle=color+'44'; ctx.lineWidth=1; ctx.strokeRect(W-90,H*.52-28,22,28);
-      ctx.fillStyle=color+'66'; ctx.font='9px "Courier New"'; ctx.textAlign='center';
-      ctx.fillText('NOE FLIGHT  //  ALT: '+Math.round(50+Math.sin(t*.1)*15)+'m  //  '+Math.round(prog*100)+'% TO TARGET', W/2, H-16);
-      return t>=dur+60;
+      // Sim ring
+      if(sim&&sim.unitId===unit.id){ctx.strokeStyle=cc+'70';ctx.lineWidth=1.5/zoom;ctx.setLineDash([3/zoom,3/zoom]);ctx.beginPath();ctx.arc(unit.x,unit.y,r+7/zoom,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
+    });
+
+    // Placing crosshair
+    if(placingR.current){const cc=COUNTRIES[selCtryR.current].color;ctx.strokeStyle=cc+'44';ctx.lineWidth=.8/zoom;ctx.setLineDash([3/zoom,5/zoom]);ctx.beginPath();ctx.moveTo(W/2/zoom/zoom,0);ctx.lineTo(W/2/zoom/zoom,H/zoom);ctx.stroke();ctx.beginPath();ctx.moveTo(0,H/2/zoom/zoom);ctx.lineTo(W/zoom,H/2/zoom/zoom);ctx.stroke();ctx.setLineDash([]);}
+
+    ctx.restore();
+
+    // Briefing bar
+    if(briefing){ctx.fillStyle='rgba(2,5,10,0.9)';ctx.fillRect(0,0,W,36);ctx.fillStyle='#4af';ctx.font="bold 10px 'Courier New'";ctx.textAlign='center';ctx.fillText(`⬛ CLASSIFIED  //  INTEL BRIEFING  //  ${scenario.toUpperCase()}  //  ${new Date().toUTCString().replace('GMT','Z')}`,W/2,22);ctx.strokeStyle='#4af22';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,36);ctx.lineTo(W,36);ctx.stroke();}
+
+    raf.current=requestAnimationFrame(render);
+  },[pan,zoom,briefing,scenario]);
+
+  useEffect(()=>{raf.current=requestAnimationFrame(render);return()=>cancelAnimationFrame(raf.current);},[render]);
+
+  const toMap=e=>{const r=cvs.current.getBoundingClientRect();return{x:((e.clientX-r.left)*(W/r.width)-pan.x)/zoom,y:((e.clientY-r.top)*(H/r.height)-pan.y)/zoom};};
+  const onClick=e=>{
+    if(panning) return;
+    const{x,y}=toMap(e);
+    if(placingR.current){const eq=placingR.current;setUnits(p=>[...p,{id:UID++,country:selCtryR.current,sym:eq.sym,...eq,x,y}]);return;}
+    let hit=null;unitsR.current.forEach(u=>{if(Math.hypot(u.x-x,u.y-y)<14) hit=u.id;});setSelUnit(hit);
+  };
+  const onDown=e=>{
+    if(e.button===1||e.altKey){setPanning(true);setLastP({x:e.clientX,y:e.clientY});e.preventDefault();return;}
+    const{x,y}=toMap(e);unitsR.current.forEach(u=>{if(Math.hypot(u.x-x,u.y-y)<14&&!placingR.current) setDragging(u.id);});
+  };
+  const onMove=e=>{
+    if(panning&&lastP){setPan(p=>({x:p.x+e.clientX-lastP.x,y:p.y+e.clientY-lastP.y}));setLastP({x:e.clientX,y:e.clientY});}
+    if(dragging!==null){const{x,y}=toMap(e);setUnits(p=>p.map(u=>u.id===dragging?{...u,x,y}:u));}
+  };
+  const onUp=()=>{setPanning(false);setLastP(null);setDragging(null);};
+  const onWheel=e=>{e.preventDefault();setZoom(z=>Math.min(4,Math.max(.22,z*(e.deltaY>0?.87:1.14))));};
+
+  const startSim=(eq,ctry)=>{
+    let tid=null;
+    const existing=unitsR.current.find(u=>u.id===eq.id||u.name===eq.name);
+    if(existing){tid=existing.id;}
+    else{
+      const nid=UID++;
+      const cx=(W*.45-pan.x)/zoom,cy=(H*.42-pan.y)/zoom;
+      setUnits(p=>[...p,{id:nid,country:ctry,sym:eq.sym,...eq,x:cx,y:cy}]);
+      tid=nid;
     }
+    setActiveSim({unitId:tid,type:getSimType(eq.id),state:{P:[]},t:0,color:COUNTRIES[ctry].color});
+    setSelUnit(tid);
+  };
 
-    function simSAMIntercept(ctx, state, t, color, W, H) {
-      drawTerrain(ctx,W,H); drawGrid(ctx,W,H);
-      const {particles}=state, dur=260, p=t/dur;
-      const tx=W*.85-(W*.65)*p, ty=H*.05+(H*.65)*p*p;
-      const samLaunch=60, intP=.55;
-      const samP=Math.max(0,Math.min(1,(t-samLaunch)/((intP*dur)-samLaunch)));
-      const sox=W*.25, soy=H*.7;
-      const ix=W*.85-(W*.65)*intP, iy=H*.05+(H*.65)*intP*intP;
-      const sx=sox+(ix-sox)*samP, sy=soy+(iy-soy)*samP-Math.sin(samP*Math.PI)*40;
-      if(t%2===0&&p<.97) smokeTrail(particles,tx,ty,'#ff4444aa');
-      if(t>samLaunch&&samP<.97){smokeTrail(particles,sx,sy,'#00ccffaa'); particles.push(new Particle(sx,sy,0,0,8,'#ffffff',1.5));}
-      const intercepted=p>=intP-.01;
-      if(intercepted&&!state.exploded){state.exploded=true; explode(particles,ix,iy,'#ffffff','#ffcc00',80); explode(particles,ix,iy,'#ff8800','#ff4400',40);}
-      particles.forEach(p2=>p2.update()); particles.forEach(p2=>p2.draw(ctx)); state.particles=particles.filter(p2=>!p2.dead);
-      const sweep=(t*2)%360;
-      ctx.save(); ctx.translate(sox,soy);
-      const sweepRad=sweep*Math.PI/180;
-      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,120,sweepRad-.4,sweepRad); ctx.closePath();
-      ctx.fillStyle=color+'12'; ctx.fill(); ctx.strokeStyle=color+'50'; ctx.lineWidth=1; ctx.stroke();
-      [50,100,150,200].forEach(r=>{ctx.strokeStyle=color+'18'; ctx.lineWidth=.5; ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke();});
-      ctx.restore();
-      ctx.fillStyle=color; ctx.fillRect(sox-14,soy,28,12); ctx.fillStyle=color+'aa'; ctx.fillRect(sox-3,soy-16,6,16);
-      if(!intercepted){
-        ctx.fillStyle='#ff4444'; ctx.shadowBlur=8; ctx.shadowColor='#ff4444';
-        ctx.beginPath(); ctx.arc(tx,ty,5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
-      }
-      if(t>samLaunch&&samP<.97){
-        ctx.fillStyle=color; ctx.shadowBlur=10; ctx.shadowColor=color;
-        ctx.beginPath(); ctx.arc(sx,sy,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
-      }
-      ctx.fillStyle=state.exploded?'#00ff88':color+'88'; ctx.font='9px "Courier New"'; ctx.textAlign='center';
-      ctx.fillText(state.exploded?'✓ INTERCEPT CONFIRMED':(t<samLaunch?'TRACKING INBOUND THREAT':'INTERCEPTOR AWAY')+'  //  RANGE: '+Math.round((1-samP)*180)+'km', W/2, H-16);
-      return t>=dur+80;
-    }
+  const selUO=units.find(u=>u.id===selUnit);
+  const cc=COUNTRIES[selCtry].color;
 
-    function simAirRadar(ctx, state, t, color, W, H) {
-      ctx.fillStyle='#020808'; ctx.fillRect(0,0,W,H);
-      drawGrid(ctx,W,H,'rgba(0,255,100,0.04)');
-      const cx=W/2, cy=H/2, maxR=Math.min(W,H)*.42, sweep=(t*1.5)%360;
-      [.25,.5,.75,1].forEach(f=>{
-        const r=maxR*f; ctx.strokeStyle=color+'22'; ctx.lineWidth=.8;
-        ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
-        ctx.fillStyle=color+'44'; ctx.font='9px "Courier New"'; ctx.textAlign='left';
-        ctx.fillText(Math.round(f*400)+'km', cx+r+4, cy+4);
-      });
-      ctx.strokeStyle=color+'18'; ctx.lineWidth=.5;
-      ctx.beginPath(); ctx.moveTo(cx,50); ctx.lineTo(cx,H-50); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(50,cy); ctx.lineTo(W-50,cy); ctx.stroke();
-      const sweepRad=sweep*Math.PI/180;
-      for(let i=0;i<30;i++){const a=sweepRad-(i*.05); ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,maxR,a-.05,a); ctx.closePath(); ctx.fillStyle=color+Math.floor((30-i)*4).toString(16).padStart(2,'0'); ctx.fill();}
-      ctx.strokeStyle=color+'cc'; ctx.lineWidth=1.5; ctx.shadowBlur=8; ctx.shadowColor=color;
-      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(sweepRad)*maxR,cy+Math.sin(sweepRad)*maxR); ctx.stroke(); ctx.shadowBlur=0;
-      if(!state.contacts){state.contacts=[{angle:25,dist:.55,id:'TGT-001',type:'FIGHTER',threat:'HIGH'},{angle:110,dist:.38,id:'TGT-002',type:'BOMBER',threat:'CRITICAL'},{angle:200,dist:.71,id:'TGT-003',type:'UNDEF',threat:'UNKNOWN'},{angle:305,dist:.44,id:'TGT-004',type:'FIGHTER',threat:'HIGH'},{angle:68,dist:.82,id:'TGT-005',type:'MISSILE',threat:'CRITICAL'},{angle:155,dist:.28,id:'TGT-006',type:'HELICOPTER',threat:'MEDIUM'}]; state.cAge={}; state.contacts.forEach(c=>{state.cAge[c.id]=0;});}
-      const TCOLS={'CRITICAL':'#ff3333','HIGH':'#ff8800','MEDIUM':'#ffdd00','UNKNOWN':'#aaaaaa'};
-      state.contacts.forEach(c=>{
-        const ca=c.angle*Math.PI/180, cx2=cx+Math.cos(ca)*maxR*c.dist, cy2=cy+Math.sin(ca)*maxR*c.dist;
-        const diff=((sweep-c.angle)+360)%360; if(diff<8) state.cAge[c.id]=60;
-        if(state.cAge[c.id]>0){
-          state.cAge[c.id]--;
-          const alpha=state.cAge[c.id]/60, tc=TCOLS[c.threat]||'#aaa';
-          ctx.globalAlpha=alpha; ctx.fillStyle=tc; ctx.shadowBlur=10; ctx.shadowColor=tc;
-          ctx.beginPath(); ctx.arc(cx2,cy2,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
-          ctx.fillStyle=tc; ctx.font='bold 8px "Courier New"'; ctx.textAlign='left';
-          ctx.fillText(c.id, cx2+8, cy2-4); ctx.fillStyle=tc+'aa'; ctx.fillText(c.type, cx2+8, cy2+6);
-          ctx.globalAlpha=1;
-        }
-      });
-      ctx.fillStyle=color; ctx.shadowBlur=12; ctx.shadowColor=color;
-      ctx.beginPath(); ctx.arc(cx,cy,5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
-      const active=Object.values(state.cAge||{}).filter(a=>a>0).length;
-      ctx.fillStyle=active>0?'#ff3333':color+'66'; ctx.font='9px "Courier New"'; ctx.textAlign='center';
-      ctx.fillText('CONTACTS: '+active+'  //  SWEEP: '+Math.round(sweep)+'°  //  MODE: LONG-RANGE SURVEILLANCE', W/2, H-16);
-      return false;
-    }
+  return(
+    <div style={{display:'flex',flexDirection:'column',height:'100vh',width:'100vw',background:'#050810',color:'#4af',fontFamily:"'Courier New',monospace",overflow:'hidden',userSelect:'none'}}>
 
-    function simDogfight(ctx, state, t, color, W, H) {
-      const sky=ctx.createLinearGradient(0,0,0,H); sky.addColorStop(0,'#010510'); sky.addColorStop(.6,'#021020'); sky.addColorStop(1,'#030810');
-      ctx.fillStyle=sky; ctx.fillRect(0,0,W,H); drawGrid(ctx,W,H);
-      if(!state.stars) state.stars=Array.from({length:80},()=>({x:Math.random()*W,y:Math.random()*H*.7,r:Math.random()*1.2,b:Math.random()}));
-      state.stars.forEach(s=>{ctx.fillStyle='rgba(255,255,255,'+(0.3+Math.sin(t*.05+s.b*10)*.2)+')'; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();});
-      const {particles}=state;
-      const fx=(100+t*1.8)%W, fy=H*.35+Math.sin(t*.04)*80+Math.cos(t*.025)*40;
-      const ex=(fx-200+Math.sin(t*.03)*60+W)%W, ey=fy+Math.cos(t*.04)*50+Math.sin(t*.06)*30;
-      if(!state.missileFired&&t>120){state.missileFired=true; state.mx=fx; state.my=fy;}
-      if(state.missileFired&&!state.missileHit){
-        const mp=Math.min(1,(t-120)/80);
-        state.mx=fx+(ex-fx)*mp; state.my=fy+(ey-fy)*mp;
-        smokeTrail(particles,state.mx,state.my,'#aaaaaa88');
-        if(mp>.9&&!state.missileHit){state.missileHit=true; explode(particles,state.mx,state.my,'#ff4400','#ffcc00',80);}
-      }
-      if(t%3===0){smokeTrail(particles,fx-20,fy,'#ffffff22'); if(!state.missileHit) smokeTrail(particles,ex-20,ey,'#ff440022');}
-      particles.forEach(p=>p.update()); particles.forEach(p=>p.draw(ctx)); state.particles=particles.filter(p=>!p.dead);
-      drawAircraft(ctx,fx,fy,Math.atan2(Math.cos(t*.04)*80*.04-Math.sin(t*.025)*40*.025,1.8),color,'FRIENDLY');
-      if(!state.missileHit) drawAircraft(ctx,ex,ey,Math.atan2(ey-(H*.35+Math.sin((t-5)*.04)*80),1.5),'#ff3333','HOSTILE');
-      if(state.missileFired&&!state.missileHit){ctx.fillStyle='#00ccff'; ctx.shadowBlur=8; ctx.shadowColor='#00ccff'; ctx.beginPath(); ctx.arc(state.mx%W,state.my,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;}
-      ctx.fillStyle=color+'88'; ctx.font='9px "Courier New"'; ctx.textAlign='center';
-      ctx.fillText('SPEED: M1.4  //  ALT: 8,200m  //  G: '+(2+Math.abs(Math.cos(t*.04))*7).toFixed(1)+'g  //  '+(state.missileHit?'✓ FOX-3 SPLASH':t>120?'FOX-3 AWAY':'RADAR LOCK'), W/2, H-16);
-      return t>400;
-    }
+      {/* TOP BAR */}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'4px 14px',background:'#030609',borderBottom:'1px solid #0d2030',flexShrink:0,height:34}}>
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          <span style={{color:'#ff3333',fontSize:8,letterSpacing:3,fontWeight:'bold'}}>⬛ CLASSIFIED</span>
+          <span style={{color:'#6cf',fontSize:11,fontWeight:'bold',letterSpacing:2}}>TACTICAL INTELLIGENCE PLATFORM</span>
+          <span style={{color:'#2a6a8a',fontSize:8}}>v3.0 // TRAINING USE ONLY</span>
+        </div>
+        <div style={{display:'flex',gap:5,alignItems:'center'}}>
+          <input value={scenario} onChange={e=>setScenario(e.target.value)}
+            style={{background:'#030c14',border:'1px solid #0d2030',color:'#4af',padding:'2px 7px',fontSize:9,width:190,outline:'none'}}/>
+          <button onClick={()=>setBriefing(b=>!b)}
+            style={{background:briefing?'#4af':'transparent',color:briefing?'#000':'#4af',border:'1px solid #4af44',padding:'2px 9px',fontSize:8,letterSpacing:1}}>
+            {briefing?'● BRIEFING':'○ BRIEFING'}
+          </button>
+          {activeSim&&<button onClick={()=>setActiveSim(null)}
+            style={{background:'#140a00',color:'#ff8800',border:'1px solid #ff880040',padding:'2px 9px',fontSize:8}}>
+            ■ END SIM
+          </button>}
+          <button onClick={()=>{setUnits([]);setSelUnit(null);setActiveSim(null);}}
+            style={{background:'#14080a',color:'#ff3333',border:'1px solid #ff333340',padding:'2px 9px',fontSize:8}}>
+            ✕ CLEAR
+          </button>
+        </div>
+      </div>
 
-    function simNavalSalvo(ctx, state, t, color, W, H) {
-      const sky=ctx.createLinearGradient(0,0,0,H*.5); sky.addColorStop(0,'#020810'); sky.addColorStop(1,'#041520');
-      ctx.fillStyle=sky; ctx.fillRect(0,0,W,H*.5); drawSea(ctx,W,H,t); drawGrid(ctx,W,H);
-      const {particles}=state, sy=H*.58;
-      drawShip(ctx,120,sy,color,'CVG-01');
-      if(!state.targetSunk) drawShip(ctx,W-130,sy,'#ff3333','TGT-ALFA');
-      if(!state.salvo) state.salvo=[];
-      [60,80,100].forEach((lt,i)=>{
-        if(t===lt){state.salvo.push({x:120,y:sy-10,launched:lt,id:i}); explode(particles,120,sy-10,'#ff8800','#ffffff',20);}
-      });
-      state.salvo.forEach(m=>{
-        const mp=Math.min(1,(t-m.launched)/120);
-        m.x=120+(W-250)*mp; m.y=(sy-10)-Math.sin(mp*Math.PI)*80;
-        if(mp>.97&&!m.hit){m.hit=true; explode(particles,W-130,sy,'#ff4400','#ffcc00',80); if(m.id===2) state.targetSunk=true;}
-        if(!m.hit&&mp<.97){smokeTrail(particles,m.x,m.y,'#aaaaaa66'); ctx.fillStyle=color; ctx.shadowBlur=6; ctx.shadowColor=color; ctx.beginPath(); ctx.arc(m.x,m.y,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;}
-      });
-      if(state.targetSunk){const sk=t-280; if(sk>0&&sk%4===0) smokeTrail(particles,W-130+(Math.random()-.5)*30,sy-sk*.3,'#444444');}
-      particles.forEach(p=>p.update()); particles.forEach(p=>p.draw(ctx)); state.particles=particles.filter(p=>!p.dead);
-      const hits=state.salvo.filter(m=>m.hit).length;
-      ctx.fillStyle=color+'88'; ctx.font='9px "Courier New"'; ctx.textAlign='center';
-      ctx.fillText('SALVO: '+state.salvo.length+'/3 AWAY  //  IMPACTS: '+hits+'  //  '+(state.targetSunk?'✓ TARGET NEUTRALIZED':'TRACKING...'), W/2, H-16);
-      return t>420;
-    }
+      <div style={{display:'flex',flex:1,overflow:'hidden'}}>
 
-    function simGroundAdvance(ctx, state, t, color, W, H) {
-      drawTerrain(ctx,W,H); drawGrid(ctx,W,H);
-      const {particles}=state, gy=H*.6;
-      if(!state.units) state.units=Array.from({length:5},(_,i)=>({x:60+i*10,y:gy+Math.sin(i*1.2)*12,off:i*.8}));
-      state.units.forEach((u,i)=>{
-        u.x=Math.min(W-80,60+t*.9+i*25+Math.sin(t*.05+u.off)*5); u.y=gy+Math.sin(t*.04+u.off)*8;
-        if(t%3===0) particles.push(new Particle(u.x-15,u.y+10,(Math.random()-.5)*2,-Math.random()*.5,25,'#8B7355aa',3));
-        drawTank(ctx,u.x,u.y,color);
-      });
-      if(!state.enemies) state.enemies=[{x:W*.55,y:gy-5,alive:true},{x:W*.68,y:gy+5,alive:true},{x:W*.8,y:gy-8,alive:true}];
-      state.enemies.forEach(e=>{
-        const n=state.units[state.units.length-1];
-        if(n.x>e.x-80&&e.alive){e.alive=false; explode(particles,e.x,e.y,'#ff4400','#ffcc00',60);}
-        if(e.alive) drawTank(ctx,e.x,e.y,'#ff3333');
-      });
-      if(t%40===0&&state.units[state.units.length-1].x<W-120){const u=state.units[Math.floor(Math.random()*state.units.length)]; explode(particles,u.x+18,u.y,'#ffff00','#ff8800',15);}
-      particles.forEach(p=>p.update()); particles.forEach(p=>p.draw(ctx)); state.particles=particles.filter(p=>!p.dead);
-      ctx.fillStyle=color+'88'; ctx.font='9px "Courier New"'; ctx.textAlign='center';
-      ctx.fillText('ADVANCE: '+Math.min(100,Math.round(t/3.6))+'%  //  UNITS: '+state.units.length+'  //  NEUTRALIZED: '+state.enemies.filter(e=>!e.alive).length+'/'+state.enemies.length, W/2, H-16);
-      return t>380;
-    }
-
-    function simStealthStrike(ctx, state, t, color, W, H) {
-      drawTerrain(ctx,W,H); drawGrid(ctx,W,H);
-      const {particles}=state;
-      if(!state.radars) state.radars=[{x:W*.45,y:H*.62,range:140,sweep:0,spd:1.2},{x:W*.7,y:H*.55,range:110,sweep:80,spd:-.9}];
-      state.radars.forEach(r=>{
-        r.sweep=(r.sweep+r.spd)%360;
-        ctx.save(); ctx.translate(r.x,r.y);
-        const a=r.sweep*Math.PI/180;
-        ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r.range,a-.4,a); ctx.closePath(); ctx.fillStyle='#ff333318'; ctx.fill();
-        ctx.strokeStyle='#ff333340'; ctx.lineWidth=1; ctx.stroke();
-        [r.range*.5,r.range].forEach(rr=>{ctx.strokeStyle='#ff333320'; ctx.lineWidth=.5; ctx.beginPath(); ctx.arc(0,0,rr,0,Math.PI*2); ctx.stroke();});
-        ctx.restore(); ctx.fillStyle='#ff3333aa'; ctx.fillRect(r.x-4,r.y-10,8,10);
-      });
-      const dur=320, p=t/dur;
-      const pts=[{x:30,y:H*.2},{x:W*.2,y:H*.35},{x:W*.35,y:H*.15},{x:W*.55,y:H*.3},{x:W*.75,y:H*.2},{x:W*.88,y:H*.45},{x:W-40,y:H*.58}];
-      const segC=pts.length-1, seg=Math.min(segC-1,Math.floor(p*segC)), segP=(p*segC)-seg;
-      const from=pts[seg], to=pts[Math.min(seg+1,pts.length-1)];
-      const mx=from.x+(to.x-from.x)*segP, my=from.y+(to.y-from.y)*segP;
-      const angle=Math.atan2(to.y-from.y,to.x-from.x);
-      if(t%4===0&&p<.95) particles.push(new Particle(mx-Math.cos(angle)*15,my-Math.sin(angle)*15,-Math.cos(angle)*.5,(Math.random()-.5)*.3,12,color+'44',2));
-      particles.forEach(pp=>pp.update()); particles.forEach(pp=>pp.draw(ctx)); state.particles=particles.filter(pp=>!pp.dead);
-      if(p>.9&&!state.bombed){state.bombed=true; explode(particles,W-60,H*.62,'#ff4400','#ffcc00',100);}
-      ctx.strokeStyle=color+'15'; ctx.lineWidth=1; ctx.setLineDash([3,8]); ctx.beginPath();
-      pts.forEach((pt,i)=>i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y)); ctx.stroke(); ctx.setLineDash([]);
-      if(p<.97){ctx.save(); ctx.translate(mx,my); ctx.rotate(angle); ctx.shadowBlur=3; ctx.shadowColor=color; ctx.fillStyle=color+'dd'; ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(-10,-20); ctx.lineTo(-14,0); ctx.lineTo(-10,20); ctx.closePath(); ctx.fill(); ctx.shadowBlur=0; ctx.restore();}
-      ctx.fillStyle=color+'88'; ctx.font='9px "Courier New"'; ctx.textAlign='center';
-      ctx.fillText('RCS: <0.001m²  //  STATUS: UNDETECTED  //  '+(state.bombed?'✓ TARGET DESTROYED':'PENETRATING AIR DEFENSE'), W/2, H-16);
-      return t>dur+80;
-    }
-
-    function simAntiShip(ctx, state, t, color, W, H) {
-      const sky2=ctx.createLinearGradient(0,0,0,H*.5); sky2.addColorStop(0,'#010810'); sky2.addColorStop(1,'#031520');
-      ctx.fillStyle=sky2; ctx.fillRect(0,0,W,H*.5); drawSea(ctx,W,H*.6,t); drawGrid(ctx,W,H);
-      const {particles}=state, seaY=H*.55;
-      ctx.fillStyle=color+'aa'; ctx.fillRect(60,seaY+5,80,14); ctx.fillRect(85,seaY-8,20,14);
-      ctx.fillStyle=color+'66'; ctx.font='8px "Courier New"'; ctx.textAlign='center'; ctx.fillText('LAUNCH PLATFORM',100,seaY+28);
-      drawShip(ctx,W-160,seaY,'#ff3333','CVN-TARGET');
-      drawShip(ctx,W-80,seaY+8,'#ff333388','ESCORT');
-      const dur=280, p=t/dur;
-      const mx=140+(W-300)*p, baseY=seaY-15, popUp=p>.75?Math.sin((p-.75)/.25*Math.PI)*80:0, my=baseY-popUp;
-      if(t%2===0&&p<.95){smokeTrail(particles,mx,my,'#aaaaaa55'); particles.push(new Particle(mx,my,0,.3,10,'#ff8800aa',2));}
-      if(p>.95&&!state.impact){state.impact=true; explode(particles,W-160,seaY,'#ff4400','#ffcc00',100);}
-      particles.forEach(p2=>p2.update()); particles.forEach(p2=>p2.draw(ctx)); state.particles=particles.filter(p2=>!p2.dead);
-      if(p<.95){ctx.fillStyle=color; ctx.shadowBlur=8; ctx.shadowColor=color; ctx.beginPath(); ctx.arc(mx,my,5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; ctx.fillStyle=color+'66'; ctx.setLineDash([2,4]); ctx.strokeStyle=color+'33'; ctx.lineWidth=.5; ctx.beginPath(); ctx.moveTo(mx,my); ctx.lineTo(mx,seaY); ctx.stroke(); ctx.setLineDash([]);}
-      ctx.fillStyle=color+'88'; ctx.font='9px "Courier New"'; ctx.textAlign='center';
-      ctx.fillText('SEA-SKIMMING  //  ALT: '+Math.max(5,Math.round(15-p*10))+'m  //  '+(state.impact?'✓ DIRECT HIT ON CVN':'TERMINAL PHASE'), W/2, H-16);
-      return t>dur+80;
-    }
-
-    function simHelicopterAttack(ctx, state, t, color, W, H) {
-      drawTerrain(ctx,W,H); drawGrid(ctx,W,H);
-      const {particles}=state, gy=H*.62, hx=W*.25, hy=H*.38+Math.sin(t*.05)*8;
-      const ra=t*.2;
-      ctx.save(); ctx.translate(hx,hy-16); ctx.strokeStyle=color+'cc'; ctx.lineWidth=2;
-      ctx.beginPath(); ctx.moveTo(Math.cos(ra)*28,Math.sin(ra)*8); ctx.lineTo(Math.cos(ra+Math.PI)*28,Math.sin(ra+Math.PI)*8); ctx.stroke(); ctx.restore();
-      ctx.fillStyle=color; ctx.beginPath(); ctx.ellipse(hx,hy,22,10,0,0,Math.PI*2); ctx.fill();
-      ctx.fillRect(hx+18,hy-2,18,4); ctx.fillStyle=color+'88'; ctx.beginPath(); ctx.arc(hx-6,hy-6,7,0,Math.PI*2); ctx.fill();
-      if(t%2===0) particles.push(new Particle(hx+(Math.random()-.5)*40,hy+12,(Math.random()-.5)*3,Math.random()*1,20,'#8B7355aa',3));
-      if(!state.targets) state.targets=[{x:W*.6,y:gy-4,alive:true},{x:W*.72,y:gy+3,alive:true},{x:W*.83,y:gy-6,alive:true}];
-      [80,140,200].forEach((ft,i)=>{
-        if(t===ft&&state.targets[i]?.alive){state['m'+i]={x:hx,y:hy,hit:false}; explode(particles,hx+22,hy,'#ff8800','#ffff00',15);}
-        const m=state['m'+i];
-        if(m&&!m.hit){const mp=Math.min(1,(t-ft)/50); m.x=hx+(state.targets[i].x-hx)*mp; m.y=hy+(state.targets[i].y-hy)*mp; smokeTrail(particles,m.x,m.y,'#ff880088'); if(mp>.95&&state.targets[i].alive){m.hit=true; state.targets[i].alive=false; explode(particles,state.targets[i].x,state.targets[i].y,'#ff4400','#ffcc00',70);} if(!m.hit){ctx.fillStyle=color; ctx.beginPath(); ctx.arc(m.x,m.y,3,0,Math.PI*2); ctx.fill();}}
-      });
-      state.targets.forEach(tgt=>{if(tgt.alive) drawTank(ctx,tgt.x,tgt.y,'#ff3333');});
-      particles.forEach(p=>p.update()); particles.forEach(p=>p.draw(ctx)); state.particles=particles.filter(p=>!p.dead);
-      const kills=state.targets.filter(tg=>!tg.alive).length;
-      ctx.fillStyle=color+'88'; ctx.font='9px "Courier New"'; ctx.textAlign='center';
-      ctx.fillText('NOE HOVER  //  ATGM: '+[80,140,200].filter(ft=>t>ft).length+'  //  KILLS: '+kills+'/3  //  '+(kills===3?'✓ AREA CLEAR':'ENGAGING'), W/2, H-16);
-      return t>320;
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // WEAPON SIMULATION OVERLAY
-    // ═══════════════════════════════════════════════════════════
-    const SW = 860, SH = 520;
-
-    const SIM_LABELS = {
-      ballistic_missile: 'BALLISTIC MISSILE TRAJECTORY',
-      cruise_missile: 'CRUISE MISSILE NOE FLIGHT',
-      sam_intercept: 'SAM INTERCEPT ENGAGEMENT',
-      air_radar: 'LONG-RANGE SURVEILLANCE RADAR',
-      dogfight: 'BEYOND VISUAL RANGE ENGAGEMENT',
-      naval_salvo: 'NAVAL STRIKE SALVO',
-      ground_advance: 'ARMORED FORCE ADVANCE',
-      stealth_strike: 'STEALTH DEEP STRIKE',
-      anti_ship: 'ANTI-SHIP MISSILE ATTACK',
-      helicopter_attack: 'ATTACK HELICOPTER ENGAGEMENT',
-    };
-
-    function WeaponSimulation({ equipment, country, onClose }) {
-      const canvasRef = useRef(null);
-      const stateRef = useRef({ particles: [], t: 0 });
-      const rafRef = useRef(null);
-      const simType = getSimType(equipment.id);
-      const countryColor = { russia:'#cc2222', usa:'#1a4fa0', china:'#c8a000', nato:'#1a7a3c' }[country] || '#00cc55';
-
-      const animate = useCallback(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const state = stateRef.current;
-        const t = state.t;
-        ctx.clearRect(0, 0, SW, SH);
-        let done = false;
-        switch(simType) {
-          case 'ballistic_missile': done = simBallisticMissile(ctx, state, t, countryColor, SW, SH); break;
-          case 'cruise_missile':    done = simCruiseMissile(ctx, state, t, countryColor, SW, SH); break;
-          case 'sam_intercept':     done = simSAMIntercept(ctx, state, t, countryColor, SW, SH); break;
-          case 'air_radar':         done = simAirRadar(ctx, state, t, countryColor, SW, SH); break;
-          case 'dogfight':          done = simDogfight(ctx, state, t, countryColor, SW, SH); break;
-          case 'naval_salvo':       done = simNavalSalvo(ctx, state, t, countryColor, SW, SH); break;
-          case 'ground_advance':    done = simGroundAdvance(ctx, state, t, countryColor, SW, SH); break;
-          case 'stealth_strike':    done = simStealthStrike(ctx, state, t, countryColor, SW, SH); break;
-          case 'anti_ship':         done = simAntiShip(ctx, state, t, countryColor, SW, SH); break;
-          case 'helicopter_attack': done = simHelicopterAttack(ctx, state, t, countryColor, SW, SH); break;
-          default:                  done = simBallisticMissile(ctx, state, t, countryColor, SW, SH);
-        }
-        drawHUD(ctx, SW, SH, equipment.name, SIM_LABELS[simType]||'SIMULATION', countryColor, t);
-        if (done && simType !== 'air_radar') {
-          Object.keys(stateRef.current).forEach(k => { if(k!=='t'&&k!=='particles') delete stateRef.current[k]; });
-          stateRef.current.particles = [];
-          stateRef.current.t = 0;
-        } else {
-          state.t++;
-        }
-        rafRef.current = requestAnimationFrame(animate);
-      }, [simType, countryColor, equipment]);
-
-      useEffect(() => {
-        stateRef.current = { particles: [], t: 0 };
-        rafRef.current = requestAnimationFrame(animate);
-        return () => cancelAnimationFrame(rafRef.current);
-      }, [animate]);
-
-      const reset = () => { stateRef.current = { particles: [], t: 0 }; };
-
-      return (
-        <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.92)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'"Courier New",monospace' }}>
-          <div style={{ position:'absolute', inset:0 }} onClick={onClose} />
-          <div style={{ position:'relative', zIndex:1, border:`1px solid ${countryColor}40`, boxShadow:`0 0 40px ${countryColor}20, 0 0 80px rgba(0,0,0,0.8)`, background:'#020808' }}>
-            <canvas ref={canvasRef} width={SW} height={SH} style={{ display:'block', maxWidth:'95vw' }} />
-            <div style={{ background:'#020808', borderTop:`1px solid ${countryColor}30`, padding:'10px 20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <div>
-                <div style={{ fontSize:11, color:countryColor, fontWeight:'bold', letterSpacing:1 }}>{equipment.name}</div>
-                <div style={{ fontSize:9, color:countryColor+'66', marginTop:2 }}>{equipment.type}  ·  THREAT: {equipment.threat}</div>
-              </div>
-              <div style={{ display:'flex', gap:8 }}>
-                <button onClick={reset} style={{ background:'transparent', border:`1px solid ${countryColor}40`, color:countryColor+'88', padding:'5px 14px', cursor:'pointer', fontSize:10, fontFamily:'"Courier New"' }}>↺ REPLAY</button>
-                <button onClick={onClose} style={{ background:'#1a0a0a', border:'1px solid #ff444440', color:'#ff4444', padding:'5px 14px', cursor:'pointer', fontSize:10, fontFamily:'"Courier New"' }}>✕ CLOSE</button>
-              </div>
+        {/* LEFT */}
+        <div style={{width:235,background:'#040810',borderRight:'1px solid #0d2030',display:'flex',flexDirection:'column',flexShrink:0,overflow:'hidden'}}>
+          <div style={{padding:'7px',borderBottom:'1px solid #0d2030'}}>
+            <div style={{fontSize:7,color:'#2a6a8a',letterSpacing:2,marginBottom:4}}>FORCE SELECTION</div>
+            {Object.entries(COUNTRIES).map(([k,c])=>(
+              <button key={k} onClick={()=>setSelCtry(k)} style={{display:'flex',alignItems:'center',gap:6,width:'100%',background:selCtry===k?c.color+'18':'transparent',border:`1px solid ${selCtry===k?c.color+'55':'#0d2030'}`,color:selCtry===k?c.color:'#2a6a8a',padding:'3px 6px',marginBottom:2,textAlign:'left',fontSize:9,fontWeight:selCtry===k?'bold':'normal'}}>
+                <span style={{fontSize:11}}>{c.flag}</span><span style={{flex:1}}>{c.name}</span>
+                <span style={{background:c.color+'20',padding:'1px 4px',fontSize:7,color:c.color,border:`1px solid ${c.color}30`}}>{units.filter(u=>u.country===k).length}</span>
+              </button>
+            ))}
+          </div>
+          <div style={{padding:'5px 7px',borderBottom:'1px solid #0d2030'}}>
+            <div style={{fontSize:7,color:'#2a6a8a',letterSpacing:2,marginBottom:4}}>CATEGORY</div>
+            <div style={{display:'flex',flexWrap:'wrap',gap:2}}>
+              {CATS.map(cat=>(
+                <button key={cat} onClick={()=>setSelCat(cat)} style={{background:selCat===cat?cc+'20':'transparent',border:`1px solid ${selCat===cat?cc+'70':'#0d2030'}`,color:selCat===cat?cc:'#2a6a8a',padding:'2px 5px',fontSize:7,letterSpacing:.5}}>
+                  {CLBL[cat]}
+                </button>
+              ))}
             </div>
+          </div>
+          <div style={{flex:1,overflow:'auto',padding:'5px 7px'}}>
+            <div style={{fontSize:7,color:'#2a6a8a',letterSpacing:2,marginBottom:4}}>{CLBL[selCat].toUpperCase()}</div>
+            {(COUNTRIES[selCtry].equipment[selCat]||[]).map(eq=>{
+              const isP=placing?.id===eq.id;
+              const isS=activeSim&&units.find(u=>u.id===activeSim.unitId)?.name===eq.name;
+              return(
+                <div key={eq.id} style={{background:isP?cc+'14':isS?cc+'0c':'transparent',border:`1px solid ${isP?cc+'55':isS?cc+'35':'#0d2030'}`,padding:'4px 6px',marginBottom:2}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
+                    <span style={{fontSize:8,fontWeight:'bold',color:isP||isS?cc:'#4af'}}>{eq.sym} {eq.name}</span>
+                    <span style={{fontSize:6,padding:'1px 3px',background:TC[eq.threat]+'1a',color:TC[eq.threat],border:`1px solid ${TC[eq.threat]}35`,letterSpacing:.5}}>{eq.threat}</span>
+                  </div>
+                  <div style={{fontSize:7,color:'#2a6a8a',marginBottom:3}}>{eq.type}</div>
+                  <div style={{display:'flex',gap:2}}>
+                    <button onClick={()=>setPlacing(isP?null:eq)} style={{flex:1,background:isP?cc+'2a':'transparent',border:`1px solid ${cc}${isP?'70':'28'}`,color:isP?cc:'#2a6a8a',padding:'2px 0',fontSize:7}}>
+                      {isP?'◉ PLACING':'⊕ PLACE'}
+                    </button>
+                    <button onClick={()=>startSim(eq,selCtry)} style={{flex:1,background:isS?cc+'2a':cc+'0a',border:`1px solid ${cc}${isS?'70':'38'}`,color:cc,padding:'2px 0',fontSize:7,fontWeight:'bold'}}>
+                      {isS?'● LIVE':'▶ SIM'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {placing&&(
+            <div style={{padding:'7px',background:'#120f00',borderTop:'1px solid #2a2000',textAlign:'center'}}>
+              <div style={{fontSize:8,color:'#f0c000',marginBottom:2}}>⊕ CLICK MAP TO PLACE</div>
+              <div style={{fontSize:7,color:'#f0c00077',marginBottom:4}}>{placing.name}</div>
+              <button onClick={()=>setPlacing(null)} style={{background:'transparent',border:'1px solid #2a200055',color:'#f0c00077',padding:'2px 10px',fontSize:7}}>CANCEL</button>
+            </div>
+          )}
+        </div>
+
+        {/* MAP */}
+        <div style={{flex:1,position:'relative',overflow:'hidden'}}>
+          <canvas ref={cvs} width={W} height={H}
+            style={{width:'100%',height:'100%',display:'block',cursor:placing?'crosshair':dragging?'grabbing':'default'}}
+            onClick={onClick} onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} onWheel={onWheel}/>
+          {activeSim&&(()=>{const u=units.find(u=>u.id===activeSim.unitId);return u?(<div style={{position:'absolute',top:10,left:'50%',transform:'translateX(-50%)',background:'rgba(2,5,10,0.9)',border:`1px solid ${activeSim.color}45`,padding:'4px 12px',fontSize:8,color:activeSim.color,letterSpacing:1,pointerEvents:'none',whiteSpace:'nowrap'}}>● SIM: {u.name} — {activeSim.type.toUpperCase()}</div>):null;})()}
+          <div style={{position:'absolute',bottom:12,right:12,display:'flex',flexDirection:'column',gap:2}}>
+            {[['＋',1.14],['－',.88],['⌂',null]].map(([l,f],i)=>(
+              <button key={i} onClick={()=>f?setZoom(z=>Math.min(4,Math.max(.22,z*f))):(setZoom(1),setPan({x:0,y:0}))}
+                style={{width:24,height:24,background:'#030609',border:'1px solid #0d2030',color:'#4af',fontSize:13}}>
+                {l}
+              </button>
+            ))}
+          </div>
+          <div style={{position:'absolute',bottom:12,left:12,background:'rgba(2,5,10,0.9)',border:'1px solid #0d2030',padding:'5px 8px'}}>
+            <div style={{fontSize:6,color:'#2a6a8a',letterSpacing:2,marginBottom:3}}>THREAT</div>
+            {Object.entries(TC).map(([l,c])=>(
+              <div key={l} style={{display:'flex',alignItems:'center',gap:4,marginBottom:2}}>
+                <span style={{width:6,height:6,background:c,display:'inline-block',clipPath:'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)'}}/>
+                <span style={{color:c,fontSize:7}}>{l}</span>
+              </div>
+            ))}
+            <div style={{color:'#2a6a8a',fontSize:6,marginTop:4,borderTop:'1px solid #0d2030',paddingTop:3}}>ALT+DRAG PAN · SCROLL ZOOM<br/>▶ SIM = ANIMATES ON MAP</div>
           </div>
         </div>
-      );
-    }
 
-    // ═══════════════════════════════════════════════════════════
-    // COUNTRY / EQUIPMENT DATA
-    // ═══════════════════════════════════════════════════════════
-    const COUNTRIES = {
-      russia: { name:'Russia', color:'#cc2222', flag:'🇷🇺', equipment: {
-        aircraft: [
-          {id:'su35',name:"Su-35S 'Flanker-E'",type:'Fighter',symbol:'✈',threat:'HIGH'},
-          {id:'su57',name:"Su-57 'Felon'",type:'Stealth Fighter',symbol:'✈',threat:'CRITICAL'},
-          {id:'mig29',name:"MiG-29K 'Paden'",type:'Naval Fighter',symbol:'✈',threat:'HIGH'},
-          {id:'tu160',name:"Tu-160 'Blackjack'",type:'Strategic Bomber',symbol:'✈',threat:'CRITICAL'},
-          {id:'ka52',name:"Ka-52 'Alligator'",type:'Attack Helicopter',symbol:'🚁',threat:'HIGH'},
-        ],
-        air_defense: [
-          {id:'s400',name:"S-400 'Triumf'",type:'Long-Range SAM',symbol:'⬡',threat:'CRITICAL'},
-          {id:'s350',name:"S-350 'Vityaz'",type:'Medium SAM',symbol:'⬡',threat:'HIGH'},
-          {id:'buk',name:"SA-27 'Buk-M3'",type:'Medium SAM',symbol:'⬡',threat:'HIGH'},
-          {id:'tor',name:"SA-15 'Tor'",type:'Short-Range SAM',symbol:'⬡',threat:'MEDIUM'},
-          {id:'tunguska',name:"SA-19 'Tunguska'",type:'SHORAD',symbol:'⬡',threat:'MEDIUM'},
-          {id:'nebo',name:'Nebo-M Radar',type:'EW/Radar',symbol:'📡',threat:'HIGH'},
-        ],
-        missiles: [
-          {id:'iskander',name:'Iskander-M',type:'Ballistic Missile',symbol:'↑',threat:'CRITICAL'},
-          {id:'kalibr',name:'SS-N-30 Kalibr',type:'Cruise Missile',symbol:'↑',threat:'CRITICAL'},
-          {id:'ss26',name:'SS-26 Stone (9M723)',type:'Ballistic Missile',symbol:'↑',threat:'CRITICAL'},
-          {id:'ss21',name:'SS-21b Scarab',type:'Tactical Missile',symbol:'↑',threat:'HIGH'},
-          {id:'tochka',name:'Tochka-U',type:'Tactical Missile',symbol:'↑',threat:'HIGH'},
-        ],
-        naval: [
-          {id:'gremyashchy',name:'Gremyashchy-class',type:'Corvette',symbol:'⛵',threat:'HIGH'},
-          {id:'karakurt',name:'Karakurt-class',type:'Missile Corvette',symbol:'⛵',threat:'HIGH'},
-          {id:'soobrazitelny',name:'Soobrazitelny-class',type:'Frigate',symbol:'⛵',threat:'CRITICAL'},
-        ],
-        ground: [
-          {id:'t90',name:"T-90M 'Proryv'",type:'MBT',symbol:'▬',threat:'HIGH'},
-          {id:'t80',name:'T-80BVM',type:'MBT',symbol:'▬',threat:'HIGH'},
-          {id:'bmp3',name:'BMP-3',type:'IFV',symbol:'▬',threat:'MEDIUM'},
-        ],
-      }},
-      usa: { name:'United States', color:'#1a4fa0', flag:'🇺🇸', equipment: {
-        aircraft: [
-          {id:'f35a',name:'F-35A Lightning II',type:'Stealth Fighter',symbol:'✈',threat:'CRITICAL'},
-          {id:'f22',name:'F-22 Raptor',type:'Air Superiority',symbol:'✈',threat:'CRITICAL'},
-          {id:'b2',name:'B-2 Spirit',type:'Stealth Bomber',symbol:'✈',threat:'CRITICAL'},
-          {id:'f16',name:'F-16C Viper',type:'Multirole Fighter',symbol:'✈',threat:'HIGH'},
-          {id:'mq9',name:'MQ-9 Reaper',type:'UCAV',symbol:'✈',threat:'HIGH'},
-          {id:'ah64',name:'AH-64E Apache',type:'Attack Helicopter',symbol:'🚁',threat:'HIGH'},
-        ],
-        air_defense: [
-          {id:'patriot',name:'MIM-104 Patriot PAC-3',type:'Long-Range SAM',symbol:'⬡',threat:'CRITICAL'},
-          {id:'thaad',name:'THAAD',type:'Terminal Defense',symbol:'⬡',threat:'CRITICAL'},
-          {id:'nasams',name:'NASAMS',type:'Medium SAM',symbol:'⬡',threat:'HIGH'},
-          {id:'avenger',name:'Avenger SHORAD',type:'Short-Range SAM',symbol:'⬡',threat:'MEDIUM'},
-          {id:'an_tpy2',name:'AN/TPY-2 Radar',type:'EW/Radar',symbol:'📡',threat:'HIGH'},
-        ],
-        missiles: [
-          {id:'atacms',name:'MGM-140 ATACMS',type:'Ballistic Missile',symbol:'↑',threat:'CRITICAL'},
-          {id:'tomahawk',name:'BGM-109 Tomahawk',type:'Cruise Missile',symbol:'↑',threat:'CRITICAL'},
-          {id:'himars',name:'M142 HIMARS',type:'Rocket Artillery',symbol:'↑',threat:'HIGH'},
-          {id:'jassm',name:'AGM-158 JASSM',type:'Air-Launched Cruise',symbol:'↑',threat:'CRITICAL'},
-        ],
-        naval: [
-          {id:'burke',name:'Arleigh Burke-class DDG',type:'Destroyer',symbol:'⛵',threat:'CRITICAL'},
-          {id:'virginia',name:'Virginia-class SSN',type:'Attack Sub',symbol:'⛵',threat:'CRITICAL'},
-          {id:'cvn',name:'Nimitz-class CVN',type:'Aircraft Carrier',symbol:'⛵',threat:'CRITICAL'},
-        ],
-        ground: [
-          {id:'m1a2',name:'M1A2 SEPv3 Abrams',type:'MBT',symbol:'▬',threat:'HIGH'},
-          {id:'bradley',name:'M2A4 Bradley',type:'IFV',symbol:'▬',threat:'MEDIUM'},
-          {id:'stryker',name:'Stryker MGS',type:'Armored Vehicle',symbol:'▬',threat:'MEDIUM'},
-        ],
-      }},
-      china: { name:'China (PLA)', color:'#c8a000', flag:'🇨🇳', equipment: {
-        aircraft: [
-          {id:'j20',name:"J-20 'Mighty Dragon'",type:'Stealth Fighter',symbol:'✈',threat:'CRITICAL'},
-          {id:'j16',name:"J-16 'Flanker-L'",type:'Strike Fighter',symbol:'✈',threat:'HIGH'},
-          {id:'j10c',name:'J-10C',type:'Multirole Fighter',symbol:'✈',threat:'HIGH'},
-          {id:'h6k',name:"H-6K 'Badger'",type:'Strategic Bomber',symbol:'✈',threat:'CRITICAL'},
-          {id:'z10',name:"Z-10 'Fierce Thunder'",type:'Attack Helicopter',symbol:'🚁',threat:'HIGH'},
-        ],
-        air_defense: [
-          {id:'hq9',name:'HQ-9B',type:'Long-Range SAM',symbol:'⬡',threat:'CRITICAL'},
-          {id:'hq16',name:'HQ-16',type:'Medium SAM',symbol:'⬡',threat:'HIGH'},
-          {id:'hq17',name:'HQ-17A',type:'Short-Range SAM',symbol:'⬡',threat:'MEDIUM'},
-          {id:'jy26',name:'JY-26 Skywatch-U',type:'EW/Radar',symbol:'📡',threat:'HIGH'},
-        ],
-        missiles: [
-          {id:'df21d',name:'DF-21D (ASBM)',type:'Anti-Ship Ballistic',symbol:'↑',threat:'CRITICAL'},
-          {id:'df26',name:"DF-26 'Guam Killer'",type:'IRBM',symbol:'↑',threat:'CRITICAL'},
-          {id:'cx10a',name:'CX-10A Cruise Missile',type:'Cruise Missile',symbol:'↑',threat:'CRITICAL'},
-          {id:'pl15',name:'PL-15 AAM',type:'Air-to-Air Missile',symbol:'↑',threat:'HIGH'},
-        ],
-        naval: [
-          {id:'type055',name:'Type 055 Renhai',type:'Cruiser',symbol:'⛵',threat:'CRITICAL'},
-          {id:'type052d',name:'Type 052D Destroyer',type:'Destroyer',symbol:'⛵',threat:'HIGH'},
-          {id:'type003',name:'Type 003 Fujian CVN',type:'Aircraft Carrier',symbol:'⛵',threat:'CRITICAL'},
-        ],
-        ground: [
-          {id:'ztz99',name:'ZTZ-99A',type:'MBT',symbol:'▬',threat:'HIGH'},
-          {id:'zbd04',name:'ZBD-04A',type:'IFV',symbol:'▬',threat:'MEDIUM'},
-        ],
-      }},
-      nato: { name:'NATO Allies', color:'#1a7a3c', flag:'🏳️', equipment: {
-        aircraft: [
-          {id:'eurofighter',name:'Eurofighter Typhoon',type:'Air Superiority',symbol:'✈',threat:'HIGH'},
-          {id:'rafale',name:'Dassault Rafale F4',type:'Multirole Fighter',symbol:'✈',threat:'HIGH'},
-          {id:'gripen',name:'Saab JAS 39E Gripen',type:'Multirole Fighter',symbol:'✈',threat:'HIGH'},
-          {id:'tornado',name:'Panavia Tornado IDS',type:'Strike Aircraft',symbol:'✈',threat:'MEDIUM'},
-        ],
-        air_defense: [
-          {id:'aster30',name:'Aster 30 SAMP/T',type:'Medium-Range SAM',symbol:'⬡',threat:'HIGH'},
-          {id:'iris_t',name:'IRIS-T SLM',type:'Short-Range SAM',symbol:'⬡',threat:'HIGH'},
-          {id:'hawk',name:'MIM-23 HAWK',type:'Medium SAM',symbol:'⬡',threat:'MEDIUM'},
-          {id:'ground403',name:'Ground Master 403 Radar',type:'EW/Radar',symbol:'📡',threat:'HIGH'},
-        ],
-        missiles: [
-          {id:'scalp',name:'SCALP-EG / Storm Shadow',type:'Cruise Missile',symbol:'↑',threat:'CRITICAL'},
-          {id:'meteor',name:'Meteor BVRAAM',type:'Air-to-Air Missile',symbol:'↑',threat:'CRITICAL'},
-          {id:'pzh2000',name:'PzH 2000 SPH',type:'Self-Propelled Howitzer',symbol:'↑',threat:'HIGH'},
-        ],
-        naval: [
-          {id:'fremm',name:'FREMM Frigate',type:'Frigate',symbol:'⛵',threat:'HIGH'},
-          {id:'type45',name:'Type 45 Destroyer',type:'Destroyer',symbol:'⛵',threat:'HIGH'},
-          {id:'astute',name:'Astute-class SSN',type:'Attack Sub',symbol:'⛵',threat:'CRITICAL'},
-        ],
-        ground: [
-          {id:'leopard2a7',name:'Leopard 2A7+',type:'MBT',symbol:'▬',threat:'HIGH'},
-          {id:'challenger3',name:'Challenger 3',type:'MBT',symbol:'▬',threat:'HIGH'},
-          {id:'cv90',name:'CV90 Mk.IV',type:'IFV',symbol:'▬',threat:'MEDIUM'},
-        ],
-      }},
-    };
-
-    const THREAT_COLORS = { CRITICAL:'#ff3333', HIGH:'#ff8800', MEDIUM:'#ffdd00', LOW:'#33cc33' };
-    const CATEGORIES = ['aircraft','air_defense','missiles','naval','ground'];
-    const CAT_LABELS = { aircraft:'Aircraft', air_defense:'Air Defense', missiles:'Missiles & Artillery', naval:'Naval Assets', ground:'Ground Forces' };
-    let unitIdCounter = 1;
-
-    // ═══════════════════════════════════════════════════════════
-    // MAIN MAP APP
-    // ═══════════════════════════════════════════════════════════
-    function App() {
-      const canvasRef = useRef(null);
-      const [units, setUnits] = useState([]);
-      const [selCountry, setSelCountry] = useState('russia');
-      const [selCat, setSelCat] = useState('aircraft');
-      const [selEq, setSelEq] = useState(null);
-      const [placing, setPlacing] = useState(false);
-      const [selUnit, setSelUnit] = useState(null);
-      const [dragging, setDragging] = useState(null);
-      const [pan, setPan] = useState({x:0,y:0});
-      const [zoom, setZoom] = useState(1);
-      const [isPanning, setIsPanning] = useState(false);
-      const [lastPan, setLastPan] = useState(null);
-      const [briefing, setBriefing] = useState(false);
-      const [scenario, setScenario] = useState('Baltic Sea Theater');
-      const [simEq, setSimEq] = useState(null);
-      const W=900, H=620;
-
-      const drawMap = useCallback(() => {
-        const canvas = canvasRef.current; if(!canvas) return;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0,0,W,H); ctx.save(); ctx.translate(pan.x,pan.y); ctx.scale(zoom,zoom);
-        const bg=ctx.createLinearGradient(0,0,W,H); bg.addColorStop(0,'#0d1a0d'); bg.addColorStop(.5,'#0a1a12'); bg.addColorStop(1,'#0d1520');
-        ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-        ctx.strokeStyle='rgba(0,255,100,0.08)'; ctx.lineWidth=.5;
-        for(let x=0;x<=W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-        for(let y=0;y<=H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-        [{x:50,y:60,w:300,h:200,c:'rgba(20,50,20,0.6)'},{x:380,y:40,w:250,h:180,c:'rgba(15,45,15,0.5)'},{x:600,y:80,w:280,h:220,c:'rgba(18,48,18,0.55)'},{x:80,y:310,w:200,h:200,c:'rgba(20,50,20,0.5)'},{x:350,y:280,w:180,h:150,c:'rgba(22,52,22,0.5)'},{x:580,y:350,w:290,h:230,c:'rgba(15,45,15,0.55)'},{x:170,y:450,w:350,h:160,c:'rgba(20,50,20,0.5)'}].forEach(z=>{ctx.fillStyle=z.c;ctx.beginPath();ctx.ellipse(z.x+z.w/2,z.y+z.h/2,z.w/2,z.h/2,0,0,Math.PI*2);ctx.fill();});
-        [{x:260,y:200,w:180,h:120,c:'rgba(0,30,80,0.7)'},{x:470,y:250,w:140,h:100,c:'rgba(0,25,70,0.65)'},{x:120,y:350,w:240,h:130,c:'rgba(0,30,80,0.6)'},{x:700,y:310,w:180,h:110,c:'rgba(0,28,75,0.65)'}].forEach(z=>{ctx.fillStyle=z.c;ctx.beginPath();ctx.ellipse(z.x+z.w/2,z.y+z.h/2,z.w/2,z.h/2,.3,0,Math.PI*2);ctx.fill();});
-        ctx.fillStyle='rgba(0,255,100,0.25)'; ctx.font="10px 'Courier New'";
-        for(let gx=0;gx<W;gx+=120) for(let gy=0;gy<H;gy+=80) ctx.fillText((60-gy/10).toFixed(1)+'N '+(20+gx/15).toFixed(1)+'E',gx+4,gy+12);
-        if(selUnit){const u=units.find(u=>u.id===selUnit); if(u){ctx.strokeStyle=THREAT_COLORS[u.threat]+'44';ctx.lineWidth=1;ctx.setLineDash([4,4]);[60,120,200].forEach(r=>{ctx.beginPath();ctx.arc(u.x,u.y,r,0,Math.PI*2);ctx.stroke();});ctx.setLineDash([]);}}
-        units.forEach(unit=>{
-          const isSel=unit.id===selUnit, cc=COUNTRIES[unit.country].color, tc=THREAT_COLORS[unit.threat];
-          ctx.shadowBlur=isSel?20:8; ctx.shadowColor=cc;
-          ctx.fillStyle=isSel?cc:cc+'cc'; ctx.strokeStyle=isSel?'#ffffff':tc; ctx.lineWidth=isSel?2:1;
-          ctx.beginPath(); ctx.arc(unit.x,unit.y,isSel?14:10,0,Math.PI*2); ctx.fill(); ctx.stroke();
-          ctx.shadowBlur=0;
-          ctx.fillStyle='#ffffff'; ctx.font=(isSel?12:10)+'px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
-          ctx.fillText(unit.symbol,unit.x,unit.y);
-          if(zoom>.7){
-            ctx.fillStyle=cc; ctx.font="bold 9px 'Courier New'"; ctx.textAlign='left'; ctx.textBaseline='top';
-            const lw=ctx.measureText(unit.name).width+8;
-            ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(unit.x+14,unit.y-9,lw,14);
-            ctx.strokeStyle=cc+'88'; ctx.lineWidth=.5; ctx.strokeRect(unit.x+14,unit.y-9,lw,14);
-            ctx.fillStyle=cc; ctx.fillText(unit.name,unit.x+18,unit.y-8);
-          }
-          ctx.fillStyle=tc; ctx.beginPath(); ctx.arc(unit.x+(isSel?11:8),unit.y-(isSel?11:8),3,0,Math.PI*2); ctx.fill();
-        });
-        if(placing){ctx.strokeStyle='rgba(255,255,0,0.4)';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();ctx.setLineDash([]);}
-        ctx.restore();
-        if(briefing){ctx.fillStyle='rgba(0,0,0,0.85)';ctx.fillRect(0,0,W,36);ctx.fillStyle='#00ff66';ctx.font="bold 13px 'Courier New'";ctx.textAlign='center';ctx.fillText('⬛ CLASSIFIED // INTEL BRIEFING // '+scenario.toUpperCase()+' // '+new Date().toUTCString().replace('GMT','Z'),W/2,22);}
-      }, [units,selUnit,pan,zoom,placing,briefing,scenario]);
-
-      useEffect(() => { drawMap(); }, [drawMap]);
-
-      const coords = e => { const r=canvasRef.current.getBoundingClientRect(),sx=W/r.width,sy=H/r.height; return {x:((e.clientX-r.left)*sx-pan.x)/zoom,y:((e.clientY-r.top)*sy-pan.y)/zoom}; };
-
-      const handleClick = e => {
-        if(isPanning) return;
-        const {x,y}=coords(e);
-        if(placing&&selEq){const eq=COUNTRIES[selCountry].equipment[selCat].find(q=>q.id===selEq); if(eq) setUnits(p=>[...p,{id:unitIdCounter++,country:selCountry,category:selCat,...eq,x,y}]); return;}
-        let clicked=null; units.forEach(u=>{if(Math.sqrt((u.x-x)**2+(u.y-y)**2)<16) clicked=u.id;}); setSelUnit(clicked);
-      };
-      const handleDown = e => {
-        if(e.button===1||e.altKey){setIsPanning(true);setLastPan({x:e.clientX,y:e.clientY});e.preventDefault();}
-        const {x,y}=coords(e); units.forEach(u=>{if(Math.sqrt((u.x-x)**2+(u.y-y)**2)<16&&!placing) setDragging(u.id);});
-      };
-      const handleMove = e => {
-        if(isPanning&&lastPan){setPan(p=>({x:p.x+e.clientX-lastPan.x,y:p.y+e.clientY-lastPan.y}));setLastPan({x:e.clientX,y:e.clientY});}
-        if(dragging!==null){const {x,y}=coords(e);setUnits(p=>p.map(u=>u.id===dragging?{...u,x,y}:u));}
-      };
-      const handleUp = () => { setIsPanning(false);setLastPan(null);setDragging(null); };
-      const handleWheel = e => { e.preventDefault(); setZoom(z=>Math.min(3,Math.max(0.3,z*(e.deltaY>0?.9:1.1)))); };
-      const removeUnit = id => { setUnits(p=>p.filter(u=>u.id!==id)); setSelUnit(null); };
-      const selUnitObj = units.find(u=>u.id===selUnit);
-      const countsByCountry = Object.keys(COUNTRIES).map(k=>({key:k,...COUNTRIES[k],count:units.filter(u=>u.country===k).length}));
-      const cc = COUNTRIES[selCountry].color;
-
-      return (
-        <div style={{display:'flex',flexDirection:'column',height:'100vh',width:'100vw',background:'#060d08',color:'#00cc55',fontFamily:"'Courier New',monospace",overflow:'hidden',userSelect:'none'}}>
-          {/* Top bar */}
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 16px',background:'#050a06',borderBottom:'1px solid #00cc5540',flexShrink:0}}>
-            <div style={{display:'flex',alignItems:'center',gap:12}}>
-              <span style={{color:'#ff3333',fontSize:10,letterSpacing:2}}>⬛ CLASSIFIED</span>
-              <span style={{color:'#00cc55',fontSize:13,fontWeight:'bold',letterSpacing:1}}>TACTICAL INTELLIGENCE PLATFORM</span>
-              <span style={{color:'#00cc5566',fontSize:10}}>v2.6 // UNCLASS TRAINING USE</span>
-            </div>
-            <div style={{display:'flex',gap:8,alignItems:'center'}}>
-              <input value={scenario} onChange={e=>setScenario(e.target.value)} style={{background:'#0a1a0a',border:'1px solid #00cc5540',color:'#00cc55',padding:'3px 8px',fontSize:11,fontFamily:"'Courier New'",width:220}} />
-              <button onClick={()=>setBriefing(b=>!b)} style={{background:briefing?'#00cc55':'#0a1a0a',color:briefing?'#000':'#00cc55',border:'1px solid #00cc5540',padding:'3px 10px',cursor:'pointer',fontSize:11,fontFamily:"'Courier New'"}}>BRIEFING MODE</button>
-              <button onClick={()=>{setUnits([]);setSelUnit(null);}} style={{background:'#1a0a0a',color:'#ff4444',border:'1px solid #ff444440',padding:'3px 10px',cursor:'pointer',fontSize:11,fontFamily:"'Courier New'"}}>CLEAR ALL</button>
-            </div>
-          </div>
-
-          <div style={{display:'flex',flex:1,overflow:'hidden'}}>
-            {/* Left panel */}
-            <div style={{width:260,background:'#050d06',borderRight:'1px solid #00cc5520',display:'flex',flexDirection:'column',flexShrink:0,overflow:'hidden'}}>
-              <div style={{padding:'8px 10px',borderBottom:'1px solid #00cc5520'}}>
-                <div style={{fontSize:9,color:'#00cc5566',letterSpacing:2,marginBottom:6}}>SELECT NATION / FORCE</div>
-                {Object.entries(COUNTRIES).map(([k,c])=>(
-                  <button key={k} onClick={()=>setSelCountry(k)} style={{display:'flex',alignItems:'center',gap:8,background:selCountry===k?c.color+'22':'transparent',border:`1px solid ${selCountry===k?c.color:c.color+'33'}`,color:selCountry===k?c.color:c.color+'99',padding:'4px 8px',cursor:'pointer',textAlign:'left',fontFamily:"'Courier New'",fontSize:11,width:'100%',marginBottom:3}}>
-                    <span>{c.flag}</span><span style={{flex:1,fontWeight:'bold'}}>{c.name}</span>
-                    <span style={{background:c.color+'33',padding:'1px 5px',fontSize:9,color:c.color}}>{units.filter(u=>u.country===k).length}</span>
+        {/* RIGHT */}
+        <div style={{width:200,background:'#040810',borderLeft:'1px solid #0d2030',display:'flex',flexDirection:'column',flexShrink:0,overflow:'hidden'}}>
+          <div style={{padding:'7px',borderBottom:'1px solid #0d2030',minHeight:130}}>
+            <div style={{fontSize:7,color:'#2a6a8a',letterSpacing:2,marginBottom:5}}>UNIT PROFILE</div>
+            {selUO?(
+              <div style={{background:COUNTRIES[selUO.country].color+'0c',border:`1px solid ${COUNTRIES[selUO.country].color}28`,padding:'7px'}}>
+                <div style={{fontSize:9,fontWeight:'bold',color:COUNTRIES[selUO.country].color,marginBottom:3}}>{selUO.sym} {selUO.name}</div>
+                <div style={{fontSize:7,color:'#2a6a8a',marginBottom:5}}>{selUO.type}</div>
+                {[['NATION',`${COUNTRIES[selUO.country].flag} ${COUNTRIES[selUO.country].name}`,COUNTRIES[selUO.country].color],['THREAT',selUO.threat,TC[selUO.threat]],['GRID',`${Math.round(selUO.x)},${Math.round(selUO.y)}`,'#4af']].map(([k,v,vc])=>(
+                  <div key={k} style={{display:'flex',justifyContent:'space-between',marginBottom:2}}>
+                    <span style={{fontSize:7,color:'#2a6a8a'}}>{k}</span>
+                    <span style={{fontSize:7,color:vc}}>{v}</span>
+                  </div>
+                ))}
+                <div style={{display:'flex',gap:3,marginTop:5}}>
+                  <button onClick={()=>setActiveSim({unitId:selUO.id,type:getSimType(selUO.id),state:{P:[]},t:0,color:COUNTRIES[selUO.country].color})}
+                    style={{flex:1,background:COUNTRIES[selUO.country].color+'14',color:COUNTRIES[selUO.country].color,border:`1px solid ${COUNTRIES[selUO.country].color}38`,padding:'3px',fontSize:7,fontWeight:'bold'}}>
+                    ▶ SIM
                   </button>
-                ))}
-              </div>
-              <div style={{padding:'8px 10px',borderBottom:'1px solid #00cc5520'}}>
-                <div style={{fontSize:9,color:'#00cc5566',letterSpacing:2,marginBottom:6}}>EQUIPMENT CATEGORY</div>
-                <div style={{display:'flex',flexWrap:'wrap',gap:3}}>
-                  {CATEGORIES.map(cat=>(
-                    <button key={cat} onClick={()=>{setSelCat(cat);setSelEq(null);}} style={{background:selCat===cat?'#00cc5522':'transparent',border:`1px solid ${selCat===cat?'#00cc55':'#00cc5530'}`,color:selCat===cat?'#00cc55':'#00cc5566',padding:'3px 7px',cursor:'pointer',fontSize:9,fontFamily:"'Courier New'"}}>{CAT_LABELS[cat]}</button>
-                  ))}
+                  <button onClick={()=>{setUnits(p=>p.filter(u=>u.id!==selUO.id));setSelUnit(null);if(activeSim?.unitId===selUO.id) setActiveSim(null);}}
+                    style={{flex:1,background:'#140a0a',color:'#ff3333',border:'1px solid #ff333338',padding:'3px',fontSize:7}}>
+                    ✕ DEL
+                  </button>
                 </div>
               </div>
-              <div style={{flex:1,overflow:'auto',padding:'6px 10px'}}>
-                <div style={{fontSize:9,color:'#00cc5566',letterSpacing:2,marginBottom:6}}>ASSETS — {CAT_LABELS[selCat].toUpperCase()}</div>
-                {(COUNTRIES[selCountry].equipment[selCat]||[]).map(eq=>(
-                  <div key={eq.id} style={{display:'flex',flexDirection:'column',gap:4,background:selEq===eq.id?cc+'22':'transparent',border:`1px solid ${selEq===eq.id?cc:'#00cc5515'}`,padding:'5px 8px',marginBottom:3}}>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                      <span style={{fontSize:10,fontWeight:'bold',color:cc}}>{eq.symbol} {eq.name}</span>
-                      <span style={{fontSize:8,padding:'1px 4px',background:THREAT_COLORS[eq.threat]+'22',color:THREAT_COLORS[eq.threat],border:`1px solid ${THREAT_COLORS[eq.threat]}44`}}>{eq.threat}</span>
-                    </div>
-                    <span style={{fontSize:9,color:'#00cc5566',marginBottom:2}}>{eq.type}</span>
-                    <div style={{display:'flex',gap:4}}>
-                      <button onClick={()=>{setSelEq(eq.id);setPlacing(true);}} style={{flex:1,background:'transparent',border:`1px solid ${cc}40`,color:cc+'aa',padding:'3px 0',cursor:'pointer',fontSize:8,fontFamily:"'Courier New'"}}>⊕ PLACE</button>
-                      <button onClick={()=>setSimEq({...eq,category:selCat})} style={{flex:1,background:cc+'11',border:`1px solid ${cc}60`,color:cc,padding:'3px 0',cursor:'pointer',fontSize:8,fontFamily:"'Courier New'",fontWeight:'bold'}}>▶ SIMULATE</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {placing&&selEq&&(
-                <div style={{padding:'8px 10px',background:'#1a1a00',borderTop:'1px solid #ffdd0040',textAlign:'center'}}>
-                  <div style={{fontSize:10,color:'#ffdd00',marginBottom:4}}>⊕ CLICK MAP TO PLACE</div>
-                  <div style={{fontSize:9,color:'#ffdd0088'}}>{COUNTRIES[selCountry].equipment[selCat]?.find(q=>q.id===selEq)?.name}</div>
-                  <button onClick={()=>{setPlacing(false);setSelEq(null);}} style={{marginTop:6,background:'transparent',border:'1px solid #ffdd0040',color:'#ffdd0088',padding:'2px 10px',cursor:'pointer',fontSize:9,fontFamily:"'Courier New'"}}>CANCEL</button>
-                </div>
-              )}
-            </div>
-
-            {/* Map */}
-            <div style={{flex:1,position:'relative',overflow:'hidden'}}>
-              <canvas ref={canvasRef} width={W} height={H} style={{width:'100%',height:'100%',cursor:placing?'crosshair':dragging?'grabbing':'default',display:'block'}}
-                onClick={handleClick} onMouseDown={handleDown} onMouseMove={handleMove} onMouseUp={handleUp} onMouseLeave={handleUp} onWheel={handleWheel} />
-              <div style={{position:'absolute',bottom:16,right:16,display:'flex',flexDirection:'column',gap:2}}>
-                {[['＋',1.2],['－',0.8],['⌂',null]].map(([lbl,f],i)=>(
-                  <button key={i} onClick={()=>f?setZoom(z=>Math.min(3,Math.max(.3,z*f))):(setZoom(1),setPan({x:0,y:0}))} style={{width:28,height:28,background:'#050d06',border:'1px solid #00cc5540',color:'#00cc55',cursor:'pointer',fontSize:14}}>{lbl}</button>
-                ))}
-              </div>
-              <div style={{position:'absolute',bottom:16,left:16,background:'rgba(5,10,6,0.9)',border:'1px solid #00cc5530',padding:'6px 10px',fontSize:9}}>
-                <div style={{color:'#00cc5566',marginBottom:4,letterSpacing:1}}>LEGEND</div>
-                {Object.entries(THREAT_COLORS).map(([lvl,col])=>(
-                  <div key={lvl} style={{display:'flex',alignItems:'center',gap:5,marginBottom:2}}>
-                    <span style={{width:8,height:8,background:col,display:'inline-block',borderRadius:'50%'}} />
-                    <span style={{color:col}}>{lvl}</span>
-                  </div>
-                ))}
-                <div style={{color:'#00cc5540',marginTop:4}}>ALT+DRAG pan | SCROLL zoom</div>
-              </div>
-            </div>
-
-            {/* Right panel */}
-            <div style={{width:220,background:'#050d06',borderLeft:'1px solid #00cc5520',display:'flex',flexDirection:'column',flexShrink:0,overflow:'hidden'}}>
-              {selUnitObj?(
-                <div style={{padding:'10px',borderBottom:'1px solid #00cc5520'}}>
-                  <div style={{fontSize:9,color:'#00cc5566',letterSpacing:2,marginBottom:6}}>UNIT PROFILE</div>
-                  <div style={{background:COUNTRIES[selUnitObj.country].color+'11',border:`1px solid ${COUNTRIES[selUnitObj.country].color}44`,padding:'8px'}}>
-                    <div style={{fontSize:11,fontWeight:'bold',color:COUNTRIES[selUnitObj.country].color,marginBottom:4}}>{selUnitObj.symbol} {selUnitObj.name}</div>
-                    <div style={{fontSize:9,color:'#00cc5566',marginBottom:2}}>{selUnitObj.type}</div>
-                    {[['NATION',`${COUNTRIES[selUnitObj.country].flag} ${COUNTRIES[selUnitObj.country].name}`,COUNTRIES[selUnitObj.country].color],['THREAT',selUnitObj.threat,THREAT_COLORS[selUnitObj.threat]],['GRID',`${Math.round(selUnitObj.x)}.${Math.round(selUnitObj.y)}`,'#00cc55']].map(([k,v,c])=>(
-                      <div key={k} style={{display:'flex',justifyContent:'space-between',marginTop:3}}>
-                        <span style={{fontSize:9,color:'#00cc5566'}}>{k}</span><span style={{fontSize:9,color:c}}>{v}</span>
-                      </div>
-                    ))}
-                    <button onClick={()=>setSimEq({...selUnitObj})} style={{marginTop:6,width:'100%',background:COUNTRIES[selUnitObj.country].color+'11',color:COUNTRIES[selUnitObj.country].color,border:`1px solid ${COUNTRIES[selUnitObj.country].color}40`,padding:'4px',cursor:'pointer',fontSize:9,fontFamily:"'Courier New'",marginBottom:4}}>▶ SIMULATE</button>
-                    <button onClick={()=>removeUnit(selUnitObj.id)} style={{width:'100%',background:'#1a0a0a',color:'#ff4444',border:'1px solid #ff444440',padding:'4px',cursor:'pointer',fontSize:9,fontFamily:"'Courier New'"}}>REMOVE UNIT</button>
-                  </div>
-                </div>
-              ):(
-                <div style={{padding:'10px',borderBottom:'1px solid #00cc5520'}}>
-                  <div style={{fontSize:9,color:'#00cc5566',letterSpacing:2}}>UNIT PROFILE</div>
-                  <div style={{fontSize:9,color:'#00cc5530',marginTop:8}}>Click a unit on the map to view details</div>
-                </div>
-              )}
-              <div style={{padding:'8px 10px',borderBottom:'1px solid #00cc5520'}}>
-                <div style={{fontSize:9,color:'#00cc5566',letterSpacing:2,marginBottom:6}}>ORDER OF BATTLE</div>
-                {countsByCountry.filter(c=>c.count>0).length===0
-                  ?<div style={{fontSize:9,color:'#00cc5530'}}>No units placed</div>
-                  :countsByCountry.filter(c=>c.count>0).map(c=>(
-                    <div key={c.key} style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
-                      <span>{c.flag}</span>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:9,color:c.color}}>{c.name}</div>
-                        <div style={{height:3,background:c.color+'44',marginTop:2}}><div style={{height:'100%',width:Math.min(100,c.count*10)+'%',background:c.color}} /></div>
-                      </div>
-                      <span style={{fontSize:10,color:c.color,fontWeight:'bold'}}>{c.count}</span>
-                    </div>
-                  ))
-                }
-              </div>
-              <div style={{flex:1,overflow:'auto',padding:'6px 10px'}}>
-                <div style={{fontSize:9,color:'#00cc5566',letterSpacing:2,marginBottom:6}}>ALL UNITS ({units.length})</div>
-                {units.map(u=>(
-                  <div key={u.id} onClick={()=>setSelUnit(u.id)} style={{display:'flex',alignItems:'center',gap:6,marginBottom:3,padding:'3px 5px',cursor:'pointer',background:selUnit===u.id?COUNTRIES[u.country].color+'22':'transparent',border:`1px solid ${selUnit===u.id?COUNTRIES[u.country].color+'44':'transparent'}`}}>
-                    <span style={{width:6,height:6,borderRadius:'50%',background:THREAT_COLORS[u.threat],flexShrink:0}} />
-                    <span style={{fontSize:9,color:COUNTRIES[u.country].color,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{u.symbol} {u.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ):(
+              <div style={{fontSize:7,color:'#2a6a8a',marginTop:6}}>Click a unit to inspect</div>
+            )}
           </div>
-
-          {simEq&&<WeaponSimulation equipment={simEq} country={selCountry} onClose={()=>setSimEq(null)} />}
+          {activeSim&&(()=>{const u=units.find(u=>u.id===activeSim.unitId);return u?(
+            <div style={{padding:'7px',borderBottom:'1px solid #0d2030',background:'#030709'}}>
+              <div style={{fontSize:7,color:'#2a6a8a',letterSpacing:2,marginBottom:4}}>ACTIVE SIM</div>
+              <div style={{fontSize:8,color:activeSim.color,fontWeight:'bold',marginBottom:2}}>● {u.name}</div>
+              <div style={{fontSize:7,color:'#2a6a8a',marginBottom:2}}>{activeSim.type.toUpperCase()}</div>
+              <div style={{fontSize:7,color:'#4af44',marginBottom:5}}>T+{(activeSim.t/60).toFixed(1)}s</div>
+              <button onClick={()=>setActiveSim(null)} style={{width:'100%',background:'transparent',border:'1px solid #ff880038',color:'#ff8800',padding:'2px',fontSize:7}}>■ STOP</button>
+            </div>
+          ):null;})()}
+          <div style={{padding:'7px',borderBottom:'1px solid #0d2030'}}>
+            <div style={{fontSize:7,color:'#2a6a8a',letterSpacing:2,marginBottom:4}}>ORDER OF BATTLE</div>
+            {Object.entries(COUNTRIES).map(([k,c])=>{const n=units.filter(u=>u.country===k).length;if(!n) return null;return(
+              <div key={k} style={{display:'flex',alignItems:'center',gap:4,marginBottom:3}}>
+                <span style={{fontSize:10}}>{c.flag}</span>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:7,color:c.color}}>{c.name}</div>
+                  <div style={{height:2,background:c.color+'1a',marginTop:1}}><div style={{height:'100%',width:`${Math.min(100,n*8)}%`,background:c.color+'99'}}/></div>
+                </div>
+                <span style={{fontSize:8,color:c.color,fontWeight:'bold'}}>{n}</span>
+              </div>
+            );})}
+            {units.length===0&&<div style={{fontSize:7,color:'#2a6a8a'}}>No units deployed</div>}
+          </div>
+          <div style={{flex:1,overflow:'auto',padding:'5px 7px'}}>
+            <div style={{fontSize:7,color:'#2a6a8a',letterSpacing:2,marginBottom:4}}>ALL UNITS ({units.length})</div>
+            {units.map(u=>(
+              <div key={u.id} onClick={()=>setSelUnit(u.id)} style={{display:'flex',alignItems:'center',gap:4,marginBottom:2,padding:'2px 4px',cursor:'pointer',background:selUnit===u.id?COUNTRIES[u.country].color+'16':'transparent',border:`1px solid ${selUnit===u.id?COUNTRIES[u.country].color+'38':'transparent'}`}}>
+                <span style={{width:5,height:5,background:TC[u.threat],clipPath:'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',flexShrink:0}}/>
+                <span style={{fontSize:7,color:COUNTRIES[u.country].color,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{u.sym} {u.name}</span>
+                {activeSim?.unitId===u.id&&<span style={{fontSize:6,color:'#ff8800'}}>●</span>}
+              </div>
+            ))}
+          </div>
         </div>
-      );
-    }
+      </div>
+    </div>
+  );
+}
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-  </script>
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
 </body>
 </html>
