@@ -754,15 +754,14 @@ function onWheel(e){
 let _panStart=null, _panVP=null;
 function onMDown(e){
   if(e.button===0){
-    // Check if clicking on a unit
-    const {lat,lon}=canvasToGeo(e.offsetX,e.offsetY);
     const hit=hitTest(e.offsetX,e.offsetY);
     if(hit){
       if(tgtSrc && hit.id!==tgtSrc){ confirmTarget(null, hit.id); return; }
-      dragUnit=hit; isDragging=false;
+      if(!tgtSrc){ dragUnit=hit; isDragging=false; }
       return;
     }
-    if(placing||tgtSrc){ return; } // handled by click
+    // Don't start pan if we're placing or targeting — let mouseup handle those
+    if(placing||tgtSrc){ return; }
     _panStart={x:e.clientX,y:e.clientY};
     _panVP={x:vpX,y:vpY};
   }
@@ -789,12 +788,17 @@ function onMUp(e){
     dragUnit=null; isDragging=false; return;
   }
   _panStart=null; _panVP=null;
-  if(e.button===0&&!isDragging){
+  if(e.button===0){
     const r=document.getElementById('mc').getBoundingClientRect();
     const cx=e.clientX-r.left, cy2=e.clientY-r.top;
     const {lat,lon}=canvasToGeo(cx,cy2);
     if(placing){ placeUnit(lat,lon); return; }
-    if(tgtSrc){ confirmTarget(lat,lon,null); return; }
+    if(tgtSrc){
+      // Check if clicking a unit
+      const hit=hitTest(cx,cy2);
+      if(hit && hit.id!==tgtSrc){ confirmTarget(null,hit.id); return; }
+      if(!hit){ confirmTarget(lat,lon,null); return; }
+    }
   }
 }
 
